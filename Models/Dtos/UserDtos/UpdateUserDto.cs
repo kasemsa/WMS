@@ -1,4 +1,4 @@
-﻿namespace WarehouseManagementSystem.Models.Dtos
+﻿namespace WarehouseManagementSystem.Models.Dtos.UserDtos
 {
     public class UpdateUserDto
     {

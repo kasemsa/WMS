@@ -4,7 +4,7 @@ using Microsoft.AspNetCore.Mvc;
 using WarehouseManagementSystem.Contract.BaseRepository;
 using WarehouseManagementSystem.DataBase;
 using WarehouseManagementSystem.Models;
-using WarehouseManagementSystem.Models.Dtos;
+using WarehouseManagementSystem.Models.Dtos.UserDtos;
 
 namespace WarehouseManagementSystem.Controllers
 {

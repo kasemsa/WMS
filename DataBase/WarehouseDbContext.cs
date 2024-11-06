@@ -19,6 +19,9 @@ namespace WarehouseManagementSystem.DataBase
         public DbSet<Product> Products { get; set; }
         public DbSet<Customer> Customers { get; set; }
         public DbSet<Commissary> Commissaries { get; set; }
+        public DbSet<PurchaseInvoice> PurchaseInvoices { get; set; }
+        public DbSet<SalesInvoice> SalesInvoices { get; set; }
+        public DbSet<InvoiceItem> InvoiceItems { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -31,6 +34,16 @@ namespace WarehouseManagementSystem.DataBase
                 .HasOne(oi => oi.Product)
                 .WithMany()
                 .HasForeignKey(oi => oi.ProductId);
+
+            modelBuilder.Entity<SalesInvoice>()
+                .HasOne(s => s.Customer)
+                .WithMany(c => c.SalesInvoices)
+                .HasForeignKey(s => s.CustomerId);
+
+            modelBuilder.Entity<SalesInvoice>()
+                .HasOne(s => s.Commissary)
+                .WithMany()
+                .HasForeignKey(s => s.CommissaryId);
 
             base.OnModelCreating(modelBuilder);
         }

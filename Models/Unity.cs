@@ -2,5 +2,8 @@
 {
     public enum Unity
     {
+        PIECE,
+        DOZEN,
+        EXPEL
     }
 }

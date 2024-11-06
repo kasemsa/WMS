@@ -7,6 +7,9 @@ namespace WarehouseManagementSystem.Models
         public int Id { get; set; }
         public string Name { get; set; } = string.Empty;
         public string PhoneNumber { get; set; } = string.Empty;
-        public decimal Balance {  get; set; } = 0;
+        public decimal Balance { get; set; } = 0;
+
+        public int UserId { get; set; }
+        public User User { get; set; } = null!;
     }
 }

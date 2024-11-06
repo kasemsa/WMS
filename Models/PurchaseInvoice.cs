@@ -7,7 +7,7 @@ namespace WarehouseManagementSystem.Models
     {
         public int Id { get; set; }
 
-        public ICollection<Product> Products { get; set; }
+        public ICollection<InvoiceItem> InvoiceItems { get; set; }
 
         public decimal InvoiceTotal { get; set; }
         public Customer Commissary { get; set; }

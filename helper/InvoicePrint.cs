@@ -70,15 +70,15 @@ namespace WarehouseManagementSystem.helper
 
                 table.Header(header =>
                 {
-                    header.Cell().Text("Description");
+                    header.Cell().Text("Name");
                     header.Cell().AlignRight().Text("Quantity");
                     header.Cell().AlignRight().Text("Price");
                 });
 
-                foreach (var item in Model.Products)
+                foreach (var item in Model.InvoiceItems)
                 {
-                    table.Cell().Text(item.Description);
-                    //table.Cell().AlignRight().Text(item.Quantity.ToString());
+                    table.Cell().Text(item.Product.Name);
+                    table.Cell().Text(item.Quantity.ToString());
                     table.Cell().AlignRight().Text($"${item.Price}");
                 }
             });

@@ -19,5 +19,20 @@ namespace WarehouseManagementSystem.DataBase
         public DbSet<Product> Products { get; set; }
         public DbSet<Customer> Customers { get; set; }
         public DbSet<Commissary> Commissaries { get; set; }
+
+        protected override void OnModelCreating(ModelBuilder modelBuilder)
+        {
+            modelBuilder.Entity<User>()
+                .HasOne(u => u.Commissary)
+                .WithOne(c => c.User)
+                .HasForeignKey<Commissary>(c => c.UserId);
+
+            modelBuilder.Entity<InvoiceItem>()
+                .HasOne(oi => oi.Product)
+                .WithMany()
+                .HasForeignKey(oi => oi.ProductId);
+
+            base.OnModelCreating(modelBuilder);
+        }
     }
 }

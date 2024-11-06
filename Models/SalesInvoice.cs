@@ -1,5 +1,4 @@
-﻿using System.ComponentModel.DataAnnotations.Schema;
-using WarehouseManagementSystem.Models.Common;
+﻿using WarehouseManagementSystem.Models.Common;
 
 namespace WarehouseManagementSystem.Models
 {
@@ -23,14 +22,10 @@ namespace WarehouseManagementSystem.Models
         public decimal Payment { get; set; }
         public string QRCodeContent { get; set; }
         public decimal CurrentBalance { get; set; }
+        public int CustomerId { get; set; }
         public Customer Customer { get; set; }
 
-        [ForeignKey(nameof(Customer))]
-        public int CustomerId { get; set; }
-
-        [ForeignKey(nameof(Commissary))]
         public int CommissaryId { get; set; }
-
-        public Customer Commissary { get; set; }
+        public Commissary Commissary { get; set; }
     }
 }

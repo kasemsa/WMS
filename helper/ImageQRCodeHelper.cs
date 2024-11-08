@@ -1,6 +1,6 @@
 ﻿using QRCoder;
 
-namespace WarehouseManagementSystem.helper
+namespace WarehouseManagementSystem.Helper
 {
     public static class ImageQRCodeHelper
     {

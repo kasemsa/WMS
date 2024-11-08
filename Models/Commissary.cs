@@ -1,4 +1,5 @@
-﻿using WarehouseManagementSystem.Models.Common;
+﻿using System.ComponentModel.DataAnnotations.Schema;
+using WarehouseManagementSystem.Models.Common;
 
 namespace WarehouseManagementSystem.Models
 {
@@ -9,7 +10,9 @@ namespace WarehouseManagementSystem.Models
         public string PhoneNumber { get; set; } = string.Empty;
         public decimal Balance { get; set; } = 0;
 
-        public int UserId { get; set; }
         public User User { get; set; } = null!;
+        [ForeignKey(nameof(User))]
+        public int UserId { get; set; }
+
     }
 }

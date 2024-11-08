@@ -64,8 +64,7 @@ namespace WarehouseManagementSystem.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("UserId")
-                        .IsUnique();
+                    b.HasIndex("UserId");
 
                     b.ToTable("Commissaries");
                 });
@@ -153,7 +152,7 @@ namespace WarehouseManagementSystem.Migrations
                     b.Property<int?>("SalesInvoiceId")
                         .HasColumnType("int");
 
-                    b.Property<int>("Unity")
+                    b.Property<int>("Unit")
                         .HasColumnType("int");
 
                     b.HasKey("Id");
@@ -438,6 +437,9 @@ namespace WarehouseManagementSystem.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
+                    b.Property<int>("CommissaryId")
+                        .HasColumnType("int");
+
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("datetime2");
 
@@ -477,6 +479,8 @@ namespace WarehouseManagementSystem.Migrations
                         .HasColumnType("nvarchar(max)");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("CommissaryId");
 
                     b.ToTable("Users");
                 });
@@ -563,11 +567,51 @@ namespace WarehouseManagementSystem.Migrations
                     b.ToTable("UserRoles");
                 });
 
+            modelBuilder.Entity("WarehouseManagementSystem.Models.UserToken", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("CreatedBy")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime?>("DeletedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("bit");
+
+                    b.Property<DateTime?>("LastModifiedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("LastModifiedBy")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("Token")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<int>("UserId")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("UserId");
+
+                    b.ToTable("UserToken");
+                });
+
             modelBuilder.Entity("WarehouseManagementSystem.Models.Commissary", b =>
                 {
                     b.HasOne("WarehouseManagementSystem.Models.User", "User")
-                        .WithOne("Commissary")
-                        .HasForeignKey("WarehouseManagementSystem.Models.Commissary", "UserId")
+                        .WithMany()
+                        .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
@@ -642,6 +686,17 @@ namespace WarehouseManagementSystem.Migrations
                     b.Navigation("Customer");
                 });
 
+            modelBuilder.Entity("WarehouseManagementSystem.Models.User", b =>
+                {
+                    b.HasOne("WarehouseManagementSystem.Models.Commissary", "Commissary")
+                        .WithMany()
+                        .HasForeignKey("CommissaryId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Commissary");
+                });
+
             modelBuilder.Entity("WarehouseManagementSystem.Models.UserPermission", b =>
                 {
                     b.HasOne("WarehouseManagementSystem.Models.Permission", "Permission")
@@ -680,6 +735,17 @@ namespace WarehouseManagementSystem.Migrations
                     b.Navigation("User");
                 });
 
+            modelBuilder.Entity("WarehouseManagementSystem.Models.UserToken", b =>
+                {
+                    b.HasOne("WarehouseManagementSystem.Models.User", "User")
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("User");
+                });
+
             modelBuilder.Entity("WarehouseManagementSystem.Models.Customer", b =>
                 {
                     b.Navigation("SalesInvoices");
@@ -709,9 +775,6 @@ namespace WarehouseManagementSystem.Migrations
 
             modelBuilder.Entity("WarehouseManagementSystem.Models.User", b =>
                 {
-                    b.Navigation("Commissary")
-                        .IsRequired();
-
                     b.Navigation("Permissions");
 
                     b.Navigation("UserRoles");

@@ -7,6 +7,6 @@ namespace WarehouseManagementSystem.Models
         public int Id { get; set; }
         public string PermissionName { get; set; } = string.Empty;
 
-        public List<RolePermission> RolePermissions { get; set; }
+        public List<RolePermission> RolePermissions { get; set; } = null!;
     }
 }

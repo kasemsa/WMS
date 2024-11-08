@@ -1,4 +1,5 @@
-﻿using WarehouseManagementSystem.Models.Common;
+﻿using System.ComponentModel.DataAnnotations.Schema;
+using WarehouseManagementSystem.Models.Common;
 
 namespace WarehouseManagementSystem.Models
 {
@@ -14,6 +15,5 @@ namespace WarehouseManagementSystem.Models
         public List<UserRole> UserRoles { get; set; } = null!;
         public List<UserPermission>? Permissions { get; set; }
 
-        public Commissary Commissary { get; set; } = null!;
     }
 }

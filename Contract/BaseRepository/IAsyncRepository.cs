@@ -1,7 +1,11 @@
-﻿namespace WarehouseManagementSystem.Contract.BaseRepository
+﻿using System.Linq.Expressions;
+using WarehouseManagementSystem.Models;
+
+namespace WarehouseManagementSystem.Contract.BaseRepository
 {
     public interface IAsyncRepository<T> where T : class
     {
+        IQueryable<T> Where(Expression<Func<T, bool>> predicate);
         Task<T> GetByIdAsync(int? id);
         Task<T?> GetByIdAsync(int id);
         Task<T> AddAsync(T entity);

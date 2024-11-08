@@ -1,4 +1,5 @@
 ﻿using Microsoft.EntityFrameworkCore;
+using WarehouseManagementSystem.DataBase.Seeders;
 using WarehouseManagementSystem.Models;
 
 namespace WarehouseManagementSystem.DataBase
@@ -25,25 +26,19 @@ namespace WarehouseManagementSystem.DataBase
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
-            modelBuilder.Entity<User>()
-                .HasOne(u => u.Commissary)
-                .WithOne(c => c.User)
-                .HasForeignKey<Commissary>(c => c.UserId);
-
-            modelBuilder.Entity<InvoiceItem>()
-                .HasOne(oi => oi.Product)
-                .WithMany()
-                .HasForeignKey(oi => oi.ProductId);
-
-            modelBuilder.Entity<SalesInvoice>()
-                .HasOne(s => s.Customer)
-                .WithMany(c => c.SalesInvoices)
-                .HasForeignKey(s => s.CustomerId);
-
-            modelBuilder.Entity<SalesInvoice>()
-                .HasOne(s => s.Commissary)
-                .WithMany()
-                .HasForeignKey(s => s.CommissaryId);
+            modelBuilder.Entity<Commissary>().HasQueryFilter(p => !p.IsDeleted);
+            modelBuilder.Entity<Customer>().HasQueryFilter(p => !p.IsDeleted);
+            modelBuilder.Entity<InvoiceItem>().HasQueryFilter(p => !p.IsDeleted);
+            modelBuilder.Entity<Permission>().HasQueryFilter(p => !p.IsDeleted);
+            modelBuilder.Entity<Product>().HasQueryFilter(p => !p.IsDeleted);
+            modelBuilder.Entity<PurchaseInvoice>().HasQueryFilter(p => !p.IsDeleted);
+            modelBuilder.Entity<Role>().HasQueryFilter(p => !p.IsDeleted);
+            modelBuilder.Entity<RolePermission>().HasQueryFilter(p => !p.IsDeleted);
+            modelBuilder.Entity<SalesInvoice>().HasQueryFilter(p => !p.IsDeleted);
+            modelBuilder.Entity<User>().HasQueryFilter(p => !p.IsDeleted);
+            modelBuilder.Entity<UserPermission>().HasQueryFilter(p => !p.IsDeleted);
+            modelBuilder.Entity<UserRole>().HasQueryFilter(p => !p.IsDeleted);
+            modelBuilder.Entity<UserToken>().HasQueryFilter(p => !p.IsDeleted);
 
             base.OnModelCreating(modelBuilder);
         }

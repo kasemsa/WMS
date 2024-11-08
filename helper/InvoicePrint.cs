@@ -2,7 +2,7 @@
 using QuestPDF.Infrastructure;
 using WarehouseManagementSystem.Models;
 
-namespace WarehouseManagementSystem.helper
+namespace WarehouseManagementSystem.Helper
 {
     public class InvoicePrint : IDocument
     {

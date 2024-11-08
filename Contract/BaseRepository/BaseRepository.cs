@@ -1,6 +1,8 @@
 ﻿using Microsoft.EntityFrameworkCore;
+using System.Linq.Expressions;
 using System.Transactions;
 using WarehouseManagementSystem.DataBase;
+using WarehouseManagementSystem.Models;
 
 namespace WarehouseManagementSystem.Contract.BaseRepository
 {
@@ -91,6 +93,17 @@ namespace WarehouseManagementSystem.Contract.BaseRepository
                     throw;
                 }
             }
+        }
+
+        //public async Task<User> GetUserByUserName(string userName)
+        //{
+        //    var User = await _dbContext.Users.Where(u => u.UserName == userName).FirstOrDefaultAsync();
+        //    return User;
+        //}
+
+        public IQueryable<T> Where(Expression<Func<T, bool>> predicate)
+        {
+            return _DbSet.AsNoTracking().Where(predicate);
         }
     }
 }

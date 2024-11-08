@@ -8,6 +8,6 @@ namespace WarehouseManagementSystem.Models
         public string Name { get; set; } = string.Empty;
         public string City { get; set; } = string.Empty;
         public decimal Balance { get; set; } = 0;
-        public ICollection<SalesInvoice> SalesInvoices { get; set; }
+        public List<SalesInvoice> SalesInvoices { get; set; } = null!;
     }
 }

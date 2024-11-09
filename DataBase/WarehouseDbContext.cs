@@ -1,5 +1,4 @@
 ﻿using Microsoft.EntityFrameworkCore;
-using WarehouseManagementSystem.DataBase.Seeders;
 using WarehouseManagementSystem.Models;
 
 namespace WarehouseManagementSystem.DataBase

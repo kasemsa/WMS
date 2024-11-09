@@ -30,7 +30,6 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Folder Include="Models\Dtos\CustomerDtos\" />
     <Folder Include="wwwroot\" />
   </ItemGroup>
 

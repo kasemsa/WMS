@@ -14,5 +14,13 @@ namespace WarehouseManagementSystem.Models
         [ForeignKey(nameof(Product))]
         public int ProductId { get; set; }
 
+        public int? SalesInvoiceId { get; set; }
+        [ForeignKey(nameof(SalesInvoiceId))]
+        public SalesInvoice? SalesInvoice { get; set; }
+
+        public int? PurchaseInvoiceId { get; set; }
+        [ForeignKey(nameof(PurchaseInvoiceId))]
+        public PurchaseInvoice? PurchaseInvoice { get; set; }
+
     }
 }

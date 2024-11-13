@@ -1,5 +1,6 @@
 using WarehouseManagementSystem.Contract;
 using WarehouseManagementSystem.Infrastructure;
+using WarehouseManagementSystem.Middlewares;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -21,6 +22,8 @@ if (app.Environment.IsDevelopment())
     app.UseSwagger();
     app.UseSwaggerUI();
 }
+
+//app.UseMiddleware<AuthenticationMiddleware>();
 app.UseCors("Open");
 app.UseHttpsRedirection();
 

@@ -1,6 +1,7 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using WarehouseManagementSystem.Contract.BaseRepository;
 using WarehouseManagementSystem.DataBase;
+using WarehouseManagementSystem.Middlewares;
 
 namespace WarehouseManagementSystem.Contract
 {
@@ -13,6 +14,7 @@ namespace WarehouseManagementSystem.Contract
                 options.UseSqlServer(connectionString: configuration.GetConnectionString("DefaultConnection")));
 
             services.AddScoped(typeof(IAsyncRepository<>), typeof(BaseRepository<>));
+            //services.AddTransient<AuthenticationMiddleware>();
 
             return services;
         }

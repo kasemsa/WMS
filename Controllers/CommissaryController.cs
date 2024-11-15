@@ -23,13 +23,13 @@ namespace WarehouseManagementSystem.Controllers
             _commissaryRepository = commissaryRepository;
             _userRepository = userRepository;
         }
-        //[HttpGet]
-        //public async Task<IActionResult> GetAllCommissaries()
-        //{
-        //    var commissaries = await _commissaryRepository.GetAllAsync();
-        //    var commissaryDtos = _mapper.Map<IEnumerable<CommissaryDto>>(commissaries);
-        //    return Ok(commissaryDtos);
-        //}
+        [HttpGet]
+        public async Task<IActionResult> GetAllCommissaries()
+        {
+            var commissaries = await _commissaryRepository.ListAllAsync();
+            var commissaryDtos = _mapper.Map<IEnumerable<CommissaryDto>>(commissaries);
+            return Ok(commissaryDtos);
+        }
 
         [HttpGet("{commissaryId}")]
         public async Task<IActionResult> GetCommissaryById(int commissaryId)

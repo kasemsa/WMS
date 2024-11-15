@@ -66,5 +66,17 @@ namespace WarehouseManagementSystem.Controllers
 
             return Ok("تم حذف المستخدم");
         }
+
+        [HttpGet("{UserId}")]
+        public async Task<IActionResult> GetUserById(int UserId)
+        {
+            var User = await _UserRepository.GetByIdAsync(UserId);
+            if (User == null)
+            {
+                return NotFound("المستخدم غير موجود");
+            }
+            var UserDto = _mapper.Map<UserDto>(User);
+            return Ok(UserDto);
+        }
     }
 }

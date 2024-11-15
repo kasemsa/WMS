@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Mvc;
 using WarehouseManagementSystem.Contract.BaseRepository;
 using WarehouseManagementSystem.Contract.FileService;
 using WarehouseManagementSystem.Models;
+using WarehouseManagementSystem.Models.Dtos.CustomerDtos;
 using WarehouseManagementSystem.Models.Dtos.ProductDtos;
 using WarehouseManagementSystem.Models.Dtos.UserDtos;
 
@@ -74,6 +75,18 @@ namespace WarehouseManagementSystem.Controllers
             await _ProductRepository.DeleteAsync(ProductToDelete);
 
             return Ok("تم حذف المنتج");
+        }
+
+        [HttpGet("{ProductId}")]
+        public async Task<IActionResult> GetProductById(int ProductId)
+        {
+            var Product = await _ProductRepository.GetByIdAsync(ProductId);
+            if (Product == null)
+            {
+                return NotFound("المنتج غير موجود");
+            }
+            var ProductDto = _mapper.Map<ProductDto>(Product);
+            return Ok(ProductDto);
         }
     }
 }

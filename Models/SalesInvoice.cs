@@ -9,12 +9,12 @@ namespace WarehouseManagementSystem.Models
         public int Id { get; set; }
         public decimal TotalProductsPrice;
         public decimal PreviousBalance { get; set; }
+        public decimal CurrentBalance { get; set; }
+        public decimal Payment { get; set; }
         public decimal InvoiceTotal { get; set; }
         public decimal DiscountValue { get; set; }
         public DiscountType? DiscountType { get; set; }
-        public decimal Payment { get; set; }
-        public decimal CurrentBalance { get; set; }
-
+        public string QRCodeContent { get; set; }
         public Customer Customer { get; set; } = null!;
         [ForeignKey(nameof(Customer))]
         public int CustomerId { get; set; }

@@ -38,7 +38,7 @@ namespace WarehouseManagementSystem.Helper
                     //column.Item().Text($"Due Date: {Model.DueDate:d}");
                 });
 
-                //row.ConstantItem(100).Height(100).Image(ImageQRCodeHelper.GenerateQRCode(Model.QRCodeContent));
+                row.ConstantItem(100).Height(100).Image(ImageQRCodeHelper.GenerateQRCode(Model.QRCodeContent));
             });
         }
 

@@ -392,9 +392,6 @@ namespace WarehouseManagementSystem.Migrations
                     b.Property<decimal>("DiscountValue")
                         .HasColumnType("decimal(18,2)");
 
-                    b.Property<decimal>("DiscountVaule")
-                        .HasColumnType("decimal(18,2)");
-
                     b.Property<decimal>("InvoiceTotal")
                         .HasColumnType("decimal(18,2)");
 
@@ -417,9 +414,6 @@ namespace WarehouseManagementSystem.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<int>("TotalQuantity")
-                        .HasColumnType("int");
-
                     b.HasKey("Id");
 
                     b.HasIndex("CommissaryId");
@@ -436,9 +430,6 @@ namespace WarehouseManagementSystem.Migrations
                         .HasColumnType("int");
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
-
-                    b.Property<int>("CommissaryId")
-                        .HasColumnType("int");
 
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("datetime2");
@@ -479,8 +470,6 @@ namespace WarehouseManagementSystem.Migrations
                         .HasColumnType("nvarchar(max)");
 
                     b.HasKey("Id");
-
-                    b.HasIndex("CommissaryId");
 
                     b.ToTable("Users");
                 });
@@ -626,15 +615,19 @@ namespace WarehouseManagementSystem.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.HasOne("WarehouseManagementSystem.Models.PurchaseInvoice", null)
+                    b.HasOne("WarehouseManagementSystem.Models.PurchaseInvoice", "PurchaseInvoice")
                         .WithMany("InvoiceItems")
                         .HasForeignKey("PurchaseInvoiceId");
 
-                    b.HasOne("WarehouseManagementSystem.Models.SalesInvoice", null)
+                    b.HasOne("WarehouseManagementSystem.Models.SalesInvoice", "SalesInvoice")
                         .WithMany("InvoiceItems")
                         .HasForeignKey("SalesInvoiceId");
 
                     b.Navigation("Product");
+
+                    b.Navigation("PurchaseInvoice");
+
+                    b.Navigation("SalesInvoice");
                 });
 
             modelBuilder.Entity("WarehouseManagementSystem.Models.PurchaseInvoice", b =>
@@ -684,17 +677,6 @@ namespace WarehouseManagementSystem.Migrations
                     b.Navigation("Commissary");
 
                     b.Navigation("Customer");
-                });
-
-            modelBuilder.Entity("WarehouseManagementSystem.Models.User", b =>
-                {
-                    b.HasOne("WarehouseManagementSystem.Models.Commissary", "Commissary")
-                        .WithMany()
-                        .HasForeignKey("CommissaryId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("Commissary");
                 });
 
             modelBuilder.Entity("WarehouseManagementSystem.Models.UserPermission", b =>

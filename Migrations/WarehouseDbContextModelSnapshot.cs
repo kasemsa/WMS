@@ -410,6 +410,13 @@ namespace WarehouseManagementSystem.Migrations
                     b.Property<decimal>("PreviousBalance")
                         .HasColumnType("decimal(18,2)");
 
+<<<<<<< HEAD
+                    b.Property<string>("QRCodeContent")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+=======
+>>>>>>> master
                     b.HasKey("Id");
 
                     b.HasIndex("CommissaryId");

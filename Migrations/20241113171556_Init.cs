@@ -1,18 +1,12 @@
-﻿using System;
-using Microsoft.EntityFrameworkCore.Migrations;
+﻿using Microsoft.EntityFrameworkCore.Migrations;
 
 #nullable disable
 
 namespace WarehouseManagementSystem.Migrations
 {
-    /// <inheritdoc />
-<<<<<<<< HEAD:Migrations/20241113171556_Init.cs
-    public partial class Init : Migration
-========
     public partial class Create_DataBase : Migration
->>>>>>>> master:Migrations/20241113165210_Create_DataBase.cs
     {
-        /// <inheritdoc />
+
         protected override void Up(MigrationBuilder migrationBuilder)
         {
             migrationBuilder.CreateTable(
@@ -307,10 +301,7 @@ namespace WarehouseManagementSystem.Migrations
                     DiscountType = table.Column<int>(type: "int", nullable: true),
                     Payment = table.Column<decimal>(type: "decimal(18,2)", nullable: false),
                     CurrentBalance = table.Column<decimal>(type: "decimal(18,2)", nullable: false),
-<<<<<<<< HEAD:Migrations/20241113171556_Init.cs
                     QRCodeContent = table.Column<string>(type: "nvarchar(max)", nullable: false),
-========
->>>>>>>> master:Migrations/20241113165210_Create_DataBase.cs
                     CustomerId = table.Column<int>(type: "int", nullable: false),
                     CommissaryId = table.Column<int>(type: "int", nullable: false),
                     CreatedBy = table.Column<string>(type: "nvarchar(max)", nullable: true),

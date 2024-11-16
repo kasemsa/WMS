@@ -2,8 +2,8 @@
 {
     public enum Unit
     {
-        PIECE,
-        DOZEN,
-        EXPEL
+        PIECE = 1,
+        DOZEN = 12,
+        EXPEL = 48
     }
 }

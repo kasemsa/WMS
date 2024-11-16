@@ -16,6 +16,7 @@ namespace WarehouseManagementSystem.Controllers
         private readonly IAsyncRepository<Commissary> _commissaryRepository;
         private readonly IAsyncRepository<Customer> _customerRepository;
         private readonly IAsyncRepository<SalesInvoice> _salesInvoiceRepository;
+        private readonly IAsyncRepository<PurchaseInvoice> _purchaseInvoiceRepository;
         private readonly IMapper _mapper;
 
         public InvoiceController(
@@ -23,13 +24,14 @@ namespace WarehouseManagementSystem.Controllers
             IAsyncRepository<SalesInvoice> salesInvoiceRepository,
             IAsyncRepository<Commissary> commissaryRepository,
             IAsyncRepository<Customer> customerRepository,
-            IMapper mapper
-        )
+            IAsyncRepository<PurchaseInvoice> purchaseInvoiceRepository,
+            IMapper mapper)
         {
             _productRepository = productRepository;
             _salesInvoiceRepository = salesInvoiceRepository;
             _commissaryRepository = commissaryRepository;
             _customerRepository = customerRepository;
+            _purchaseInvoiceRepository = purchaseInvoiceRepository;
             _mapper = mapper;
         }
         #endregion
@@ -52,7 +54,7 @@ namespace WarehouseManagementSystem.Controllers
         #endregion
 
         #region Refund 
-        [HttpPost("refund/{id}")]
+        [HttpPost("refund/sales/{id}")]
         public async Task<IActionResult> RefundInvoice(int id)
         {
             // Retrieve the invoice
@@ -110,7 +112,7 @@ namespace WarehouseManagementSystem.Controllers
             return Ok("Invoice refunded successfully. Products returned to the commissary.");
         }
 
-        [HttpPost("refund")]
+        [HttpPost("refund/sales")]
         public async Task<IActionResult> RefundPartialInvoice([FromBody] RefundItemDto input)
         {
             // Retrieve the customer based on CustomerId
@@ -205,6 +207,60 @@ namespace WarehouseManagementSystem.Controllers
 
             return Ok(new { message = "Partial refund processed successfully." });
         }
+
+        [HttpPost("refund/purchase")]
+        public async Task<IActionResult> RefundPurchase([FromBody] CreatePurchaseInvoiceDto refundRequest)
+        {
+            // Retrieve commissary
+            var commissary = await _commissaryRepository.GetByIdAsync(refundRequest.CommissaryId);
+            if (commissary == null)
+                return NotFound($"Commissary with ID {refundRequest.CommissaryId} not found.");
+
+            decimal totalRefundAmount = 0;
+
+            foreach (var refundItem in refundRequest.InvoiceItems)
+            {
+                if (refundItem.Quantity <= 0)
+                    return BadRequest($"Invalid quantity for Product ID {refundItem.ProductId}. Quantity must be greater than zero.");
+
+                // Find the product in the commissary's inventory
+                var inventoryItem = commissary.InvoiceItems
+                    .FirstOrDefault(item => item.ProductId == refundItem.ProductId);
+
+                if (inventoryItem == null)
+                    return BadRequest($"Product ID {refundItem.ProductId} not found in Commissary inventory.");
+
+                // Convert refund quantity to base unit (PIECE)
+                int refundQuantityInBaseUnit = refundItem.Quantity * (int)refundItem.Unit;
+
+
+                // Calculate refund amount
+                decimal refundAmount = inventoryItem.Price * refundQuantityInBaseUnit;
+                totalRefundAmount += refundAmount;
+
+                // Deduct the quantity from commissary's inventory
+                inventoryItem.Quantity -= refundQuantityInBaseUnit;
+
+                // If the quantity becomes zero, optionally remove the item
+                if (inventoryItem.Quantity == 0)
+                {
+                    commissary.InvoiceItems.Remove(inventoryItem);
+                }
+            }
+
+            // Update commissary balance
+            commissary.Balance += totalRefundAmount;
+
+            // Save the changes
+            await _commissaryRepository.UpdateAsync(commissary);
+
+            return Ok(new
+            {
+                Message = "Purchase refund processed successfully.",
+                TotalRefundAmount = totalRefundAmount
+            });
+        }
+
         #endregion
 
         #region Create
@@ -264,6 +320,95 @@ namespace WarehouseManagementSystem.Controllers
             // Return the sales invoice DTO
             return _mapper.Map<SalesInvoiceDto>(salesInvoice);
         }
+
+
+        [HttpPost("purchase")]
+        public async Task<PurchaseInvoiceDto> CreatePurchaseInvoice([FromBody] CreatePurchaseInvoiceDto input)
+        {
+            if (input.InvoiceItems.Count == 0)
+                throw new ArgumentException("The invoice must include at least one item.");
+
+            // Validate Commissary
+            var commissary = await _commissaryRepository.GetByIdAsync(input.CommissaryId)
+             ?? throw new ArgumentException($"Commissary with ID {input.CommissaryId} not found.");
+
+
+            // Initialize variables for processing
+            var invoiceItems = new List<InvoiceItem>();
+            decimal invoiceTotal = 0;
+
+            foreach (var item in input.InvoiceItems)
+            {
+                // Validate Product
+                var product = await _productRepository.GetByIdAsync(item.ProductId)
+                    ?? throw new ArgumentException($"Product with ID {item.ProductId} not found.");
+
+
+                // Calculate unit price and invoice total
+                decimal unitPrice = product.Price;
+                decimal totalItemPrice = unitPrice * item.Quantity * (int)item.Unit;
+                invoiceTotal += totalItemPrice;
+
+                // Prepare the invoice item
+                invoiceItems.Add(new InvoiceItem
+                {
+                    ProductId = item.ProductId,
+                    Quantity = item.Quantity,
+                    Unit = item.Unit,
+                    Price = unitPrice,
+                    PurchaseInvoiceId = null
+                });
+            }
+
+            // Update Commissary Balance
+            commissary.Balance -= invoiceTotal;
+
+            // Update Commissary Inventory
+            foreach (var invoiceItem in invoiceItems)
+            {
+                var existingItem = commissary.InvoiceItems
+                    .FirstOrDefault(ci => ci.ProductId == invoiceItem.ProductId);
+
+                if (existingItem != null)
+                {
+                    int existingQuantityInBaseUnit = existingItem.Quantity * (int)existingItem.Unit;
+
+                    // Convert new quantity to base unit (PIECE)
+                    int newQuantityInBaseUnit = invoiceItem.Quantity * (int)invoiceItem.Unit;
+
+                    // Add quantities in base unit
+                    int totalQuantityInBaseUnit = existingQuantityInBaseUnit + newQuantityInBaseUnit;
+
+                    // Convert back to the original unit of the existing item
+                    existingItem.Quantity = totalQuantityInBaseUnit / (int)existingItem.Unit;
+                    existingItem.Quantity += invoiceItem.Quantity;
+                }
+                else
+                {
+                    commissary.InvoiceItems.Add(new InvoiceItem
+                    {
+                        ProductId = invoiceItem.ProductId,
+                        Quantity = invoiceItem.Quantity,
+                        Unit = invoiceItem.Unit,
+                        Price = invoiceItem.Price
+                    });
+                }
+            }
+
+            // Save the Purchase Invoice
+            var purchaseInvoice = new PurchaseInvoice
+            {
+                CommissaryId = commissary.Id,
+                InvoiceTotal = invoiceTotal,
+                InvoiceItems = invoiceItems
+            };
+
+            await _purchaseInvoiceRepository.AddAsync(purchaseInvoice);
+            await _commissaryRepository.UpdateAsync(commissary);
+
+            return _mapper.Map<PurchaseInvoiceDto>(purchaseInvoice);
+        }
+
         #endregion
 
         #region Update

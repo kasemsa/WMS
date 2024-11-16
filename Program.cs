@@ -1,6 +1,5 @@
 using WarehouseManagementSystem.Contract;
 using WarehouseManagementSystem.Infrastructure;
-using WarehouseManagementSystem.Middlewares;
 
 var builder = WebApplication.CreateBuilder(args);
 

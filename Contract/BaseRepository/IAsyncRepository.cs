@@ -1,5 +1,4 @@
 ﻿using System.Linq.Expressions;
-using WarehouseManagementSystem.Models;
 
 namespace WarehouseManagementSystem.Contract.BaseRepository
 {
@@ -12,5 +11,8 @@ namespace WarehouseManagementSystem.Contract.BaseRepository
         Task<T> AddAsync(T entity, string token);
         Task UpdateAsync(T entity);
         Task DeleteAsync(T entity);
+
+        Task<T> FindAsync(Expression<Func<T, bool>> criteria);
+
     }
 }

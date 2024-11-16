@@ -1,7 +1,6 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using WarehouseManagementSystem.Contract.BaseRepository;
 using WarehouseManagementSystem.DataBase;
-using WarehouseManagementSystem.Middlewares;
 
 namespace WarehouseManagementSystem.Contract
 {

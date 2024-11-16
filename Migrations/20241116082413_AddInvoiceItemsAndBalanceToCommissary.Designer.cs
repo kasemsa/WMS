@@ -12,13 +12,8 @@ using WarehouseManagementSystem.DataBase;
 namespace WarehouseManagementSystem.Migrations
 {
     [DbContext(typeof(WarehouseDbContext))]
-<<<<<<<< HEAD:Migrations/20241113171556_Init.Designer.cs
-    [Migration("20241113171556_Init")]
-    partial class Init
-========
-    [Migration("20241113165210_Create_DataBase")]
-    partial class Create_DataBase
->>>>>>>> master:Migrations/20241113165210_Create_DataBase.Designer.cs
+    [Migration("20241116082413_AddInvoiceItemsAndBalanceToCommissary")]
+    partial class AddInvoiceItemsAndBalanceToCommissary
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -127,6 +122,9 @@ namespace WarehouseManagementSystem.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
+                    b.Property<int?>("CommissaryId")
+                        .HasColumnType("int");
+
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("datetime2");
 
@@ -164,6 +162,8 @@ namespace WarehouseManagementSystem.Migrations
                         .HasColumnType("int");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("CommissaryId");
 
                     b.HasIndex("ProductId");
 
@@ -418,13 +418,9 @@ namespace WarehouseManagementSystem.Migrations
                     b.Property<decimal>("PreviousBalance")
                         .HasColumnType("decimal(18,2)");
 
-<<<<<<<< HEAD:Migrations/20241113171556_Init.Designer.cs
-                    b.Property<string>("QRCodeContent")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                    b.Property<bool>("Refunded")
+                        .HasColumnType("bit");
 
-========
->>>>>>>> master:Migrations/20241113165210_Create_DataBase.Designer.cs
                     b.HasKey("Id");
 
                     b.HasIndex("CommissaryId");
@@ -620,6 +616,10 @@ namespace WarehouseManagementSystem.Migrations
 
             modelBuilder.Entity("WarehouseManagementSystem.Models.InvoiceItem", b =>
                 {
+                    b.HasOne("WarehouseManagementSystem.Models.Commissary", null)
+                        .WithMany("InvoiceItems")
+                        .HasForeignKey("CommissaryId");
+
                     b.HasOne("WarehouseManagementSystem.Models.Product", "Product")
                         .WithMany()
                         .HasForeignKey("ProductId")
@@ -737,6 +737,11 @@ namespace WarehouseManagementSystem.Migrations
                         .IsRequired();
 
                     b.Navigation("User");
+                });
+
+            modelBuilder.Entity("WarehouseManagementSystem.Models.Commissary", b =>
+                {
+                    b.Navigation("InvoiceItems");
                 });
 
             modelBuilder.Entity("WarehouseManagementSystem.Models.Customer", b =>

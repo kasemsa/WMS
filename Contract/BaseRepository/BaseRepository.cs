@@ -2,7 +2,6 @@
 using System.Linq.Expressions;
 using System.Transactions;
 using WarehouseManagementSystem.DataBase;
-using WarehouseManagementSystem.Models;
 
 namespace WarehouseManagementSystem.Contract.BaseRepository
 {
@@ -27,6 +26,12 @@ namespace WarehouseManagementSystem.Contract.BaseRepository
             T? t = await _DbSet.FindAsync(id);
             return t;
         }
+
+        public async Task<T> FindAsync(Expression<Func<T, bool>> criteria)
+        {
+            return await _DbSet.SingleOrDefaultAsync(criteria);
+        }
+
 
         public async Task<T> AddAsync(T entity)
         {

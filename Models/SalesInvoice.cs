@@ -14,7 +14,7 @@ namespace WarehouseManagementSystem.Models
         public decimal InvoiceTotal { get; set; }
         public decimal DiscountValue { get; set; }
         public DiscountType? DiscountType { get; set; }
-        public string QRCodeContent { get; set; }
+        public bool Refunded { get; set; } = false;
         public Customer Customer { get; set; } = null!;
         [ForeignKey(nameof(Customer))]
         public int CustomerId { get; set; }

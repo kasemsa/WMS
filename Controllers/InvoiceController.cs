@@ -11,6 +11,7 @@ namespace WarehouseManagementSystem.Controllers
     [ApiController]
     public class InvoiceController : ControllerBase
     {
+        #region Init
         private readonly IAsyncRepository<Product> _productRepository;
         private readonly IAsyncRepository<Commissary> _commissaryRepository;
         private readonly IAsyncRepository<Customer> _customerRepository;
@@ -31,7 +32,9 @@ namespace WarehouseManagementSystem.Controllers
             _customerRepository = customerRepository;
             _mapper = mapper;
         }
+        #endregion
 
+        #region Get
         [HttpGet("{id}")]
         public async Task<IActionResult> GetSalesInvoiceById(int id)
         {
@@ -46,7 +49,9 @@ namespace WarehouseManagementSystem.Controllers
 
             return Ok(salesInvoiceDto);
         }
+        #endregion
 
+        #region Refund 
         [HttpPost("refund/{id}")]
         public async Task<IActionResult> RefundInvoice(int id)
         {
@@ -200,44 +205,35 @@ namespace WarehouseManagementSystem.Controllers
 
             return Ok(new { message = "Partial refund processed successfully." });
         }
+        #endregion
 
+        #region Create
 
         public async Task<SalesInvoiceDto> CreateSalesInvoice([FromForm] CreateSelesInvoiceDto input)
         {
             // Validate customer existence
-            var customer = await GetCustomerById(input.CustomerId);
-            if (customer == null)
-            {
-                throw new ArgumentException($"Customer with ID {input.CustomerId} not found.");
-            }
+            var customer = await GetCustomerById(input.CustomerId)
+                ?? throw new ArgumentException($"Customer with ID {input.CustomerId} not found.");
 
             // Validate commissary existence
-            var commissary = await GetCommissaryById(input.CommissaryId);
-            if (commissary == null)
-            {
-                throw new ArgumentException($"Commissary with ID {input.CommissaryId} not found.");
-            }
+            var commissary = await GetCommissaryById(input.CommissaryId)
+                ?? throw new ArgumentException($"Commissary with ID {input.CommissaryId} not found.");
 
             // Validate product existence and commissary stock
             foreach (var item in input.InvoiceItems)
             {
-                var product = await _productRepository.GetByIdAsync(item.ProductId);
-                if (product == null)
-                {
-                    throw new ArgumentException($"Product with ID {item.ProductId} not found.");
-                }
+                var product = await _productRepository.GetByIdAsync(item.ProductId)
+                    ?? throw new ArgumentException($"Product with ID {item.ProductId} not found.");
 
-                // Check if the commissary has enough stock
+                // Check if the commissary has enough stock in terms of the product's unit
                 var commissaryStock = commissary.InvoiceItems
                     .FirstOrDefault(ci => ci.ProductId == item.ProductId);
 
-                if (commissaryStock == null || commissaryStock.Quantity < item.Quantity)
-                {
-                    throw new ArgumentException($"Not enough stock for Product ID {item.ProductId} in Commissary ID {input.CommissaryId}.");
-                }
+                if (commissaryStock == null || commissaryStock.Quantity * (int)commissaryStock.Unit < item.Quantity * (int)item.Unit)
+                    throw new ArgumentException($"Not enough stock for Product ID {item.ProductId} in Commissary ID {input.CommissaryId}. Requested quantity exceeds available stock.");
 
                 // Deduct the quantity from the commissary stock
-                commissaryStock.Quantity -= item.Quantity;
+                commissaryStock.Quantity -= item.Quantity * (int)item.Unit; // Adjust for unit multiplier
             }
 
             // Calculate total price and discount
@@ -262,13 +258,15 @@ namespace WarehouseManagementSystem.Controllers
             await _commissaryRepository.UpdateAsync(commissary);
 
             // Save the sales invoice
-            await SaveSalesInvoice(salesInvoice);
+            await _salesInvoiceRepository.AddAsync(salesInvoice);
+            await _salesInvoiceRepository.UpdateAsync(salesInvoice);
 
             // Return the sales invoice DTO
             return _mapper.Map<SalesInvoiceDto>(salesInvoice);
         }
+        #endregion
 
-
+        #region Update
         public async Task<IActionResult> UpdateSalesInvoice(int id, [FromForm] CreateSelesInvoiceDto input)
         {
             var salesInvoice = await _salesInvoiceRepository.GetByIdAsync(id);
@@ -306,7 +304,9 @@ namespace WarehouseManagementSystem.Controllers
             var salesInvoiceDto = _mapper.Map<SalesInvoiceDto>(salesInvoice);
             return Ok(salesInvoiceDto);
         }
+        #endregion
 
+        #region Private Methods
         private async Task<Customer?> GetCustomerById(int customerId)
         {
             return await _customerRepository.GetByIdAsync(customerId);
@@ -364,7 +364,7 @@ namespace WarehouseManagementSystem.Controllers
             return new SalesInvoice
             {
                 Payment = input.Payment,
-                DiscountValue = input.DiscountValue,
+                DiscountValue = discountAmount,
                 DiscountType = input.DiscountType,
                 CustomerId = input.CustomerId,
                 CommissaryId = input.CommissaryId,
@@ -382,11 +382,6 @@ namespace WarehouseManagementSystem.Controllers
             };
         }
 
-
-        private async Task SaveSalesInvoice(SalesInvoice salesInvoice)
-        {
-            await _salesInvoiceRepository.AddAsync(salesInvoice);
-            await _salesInvoiceRepository.UpdateAsync(salesInvoice);
-        }
+        #endregion
     }
 }

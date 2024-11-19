@@ -4,7 +4,11 @@ using Microsoft.AspNetCore.Mvc;
 using WarehouseManagementSystem.Contract.BaseRepository;
 using WarehouseManagementSystem.DataBase;
 using WarehouseManagementSystem.Models;
+using WarehouseManagementSystem.Models.Common;
+using WarehouseManagementSystem.Models.Constants;
+using WarehouseManagementSystem.Models.Dtos.CustomerDtos;
 using WarehouseManagementSystem.Models.Dtos.UserDtos;
+using WarehouseManagementSystem.Models.Responses;
 
 namespace WarehouseManagementSystem.Controllers
 {
@@ -77,6 +81,22 @@ namespace WarehouseManagementSystem.Controllers
             }
             var UserDto = _mapper.Map<UserDto>(User);
             return Ok(UserDto);
+        }
+
+        [HttpGet("GetAllUsers")]
+        public async Task<IActionResult> GetAllUsers([FromQuery] IndexQuery query)
+        {
+            FilterObject filterObject = new FilterObject() { Filters = query.filters };
+
+            var Users = await _UserRepository.GetFilterThenPagedReponseAsync(filterObject, query.page, query.perPage);
+
+            var UsersDtos = _mapper.Map<IEnumerable<UserDto>>(Users);
+
+            int Count = _UserRepository.WhereThenFilter(c => true, filterObject).Count();
+
+            Pagination pagination = new Pagination(query.page, query.perPage, Count);
+
+            return Ok(new BaseResponse<IEnumerable<UserDto>>("", true, 200, UsersDtos, pagination));
         }
     }
 }

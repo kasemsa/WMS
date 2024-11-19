@@ -2,7 +2,11 @@
 using Microsoft.AspNetCore.Mvc;
 using WarehouseManagementSystem.Contract.BaseRepository;
 using WarehouseManagementSystem.Models;
+using WarehouseManagementSystem.Models.Common;
+using WarehouseManagementSystem.Models.Constants;
+using WarehouseManagementSystem.Models.Dtos.CommissaryDtos;
 using WarehouseManagementSystem.Models.Dtos.CustomerDtos;
+using WarehouseManagementSystem.Models.Responses;
 
 namespace WarehouseManagementSystem.Controllers
 {
@@ -21,13 +25,28 @@ namespace WarehouseManagementSystem.Controllers
         }
 
         // GET: api/Customer
-        //[HttpGet]
+        //
         //public async Task<IActionResult> GetAllCustomers()
         //{
         //    var customers = await _customerRepository.ListAllAsync();
         //    var customerDtos = _mapper.Map<IEnumerable<CustomerDto>>(customers);
         //    return Ok(customerDtos);
         //}
+        [HttpGet("GetAllCustomers")]
+        public async Task<IActionResult> GetAllCustomers([FromQuery] IndexQuery query)
+        {
+            FilterObject filterObject = new FilterObject() { Filters = query.filters };
+
+            var Customers = await _customerRepository.GetFilterThenPagedReponseAsync(filterObject, query.page, query.perPage);
+
+            var CustomersDtos = _mapper.Map<IEnumerable<CustomerDto>>(Customers);
+
+            int Count = _customerRepository.WhereThenFilter(c => true, filterObject).Count();
+
+            Pagination pagination = new Pagination(query.page, query.perPage, Count);
+
+            return Ok(new BaseResponse<IEnumerable<CustomerDto>>("", true, 200, CustomersDtos, pagination));
+        }
 
         [HttpGet("{id}")]
         public async Task<IActionResult> GetCustomerById(int id)

@@ -1,8 +1,12 @@
 ﻿using AutoMapper;
+using Azure.Core;
 using Microsoft.AspNetCore.Mvc;
 using WarehouseManagementSystem.Contract.BaseRepository;
 using WarehouseManagementSystem.Models;
+using WarehouseManagementSystem.Models.Common;
+using WarehouseManagementSystem.Models.Constants;
 using WarehouseManagementSystem.Models.Dtos.CommissaryDtos;
+using WarehouseManagementSystem.Models.Responses;
 
 namespace WarehouseManagementSystem.Controllers
 {
@@ -23,12 +27,20 @@ namespace WarehouseManagementSystem.Controllers
             _commissaryRepository = commissaryRepository;
             _userRepository = userRepository;
         }
-        [HttpGet]
-        public async Task<IActionResult> GetAllCommissaries()
+        [HttpGet("GetAllCommissaries")]
+        public async Task<IActionResult> GetAllCommissaries([FromQuery] IndexQuery query)
         {
-            var commissaries = await _commissaryRepository.ListAllAsync();
+            FilterObject filterObject = new FilterObject() { Filters = query.filters };
+
+            var commissaries = await _commissaryRepository.GetFilterThenPagedReponseAsync(filterObject, query.page, query.perPage);
+
             var commissaryDtos = _mapper.Map<IEnumerable<CommissaryDto>>(commissaries);
-            return Ok(commissaryDtos);
+
+            int Count = _commissaryRepository.WhereThenFilter(c => true, filterObject).Count();
+
+            Pagination pagination = new Pagination(query.page, query.perPage, Count);
+
+            return Ok(new BaseResponse<IEnumerable<CommissaryDto>>("",true,200,commissaryDtos,pagination));
         }
 
         [HttpGet("{commissaryId}")]

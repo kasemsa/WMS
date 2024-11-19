@@ -119,6 +119,9 @@ namespace WarehouseManagementSystem.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
+                    b.Property<int?>("CommissaryId")
+                        .HasColumnType("int");
+
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("datetime2");
 
@@ -156,6 +159,8 @@ namespace WarehouseManagementSystem.Migrations
                         .HasColumnType("int");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("CommissaryId");
 
                     b.HasIndex("ProductId");
 
@@ -410,13 +415,9 @@ namespace WarehouseManagementSystem.Migrations
                     b.Property<decimal>("PreviousBalance")
                         .HasColumnType("decimal(18,2)");
 
-<<<<<<< HEAD
-                    b.Property<string>("QRCodeContent")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                    b.Property<bool>("Refunded")
+                        .HasColumnType("bit");
 
-=======
->>>>>>> master
                     b.HasKey("Id");
 
                     b.HasIndex("CommissaryId");
@@ -612,6 +613,10 @@ namespace WarehouseManagementSystem.Migrations
 
             modelBuilder.Entity("WarehouseManagementSystem.Models.InvoiceItem", b =>
                 {
+                    b.HasOne("WarehouseManagementSystem.Models.Commissary", null)
+                        .WithMany("InvoiceItems")
+                        .HasForeignKey("CommissaryId");
+
                     b.HasOne("WarehouseManagementSystem.Models.Product", "Product")
                         .WithMany()
                         .HasForeignKey("ProductId")
@@ -729,6 +734,11 @@ namespace WarehouseManagementSystem.Migrations
                         .IsRequired();
 
                     b.Navigation("User");
+                });
+
+            modelBuilder.Entity("WarehouseManagementSystem.Models.Commissary", b =>
+                {
+                    b.Navigation("InvoiceItems");
                 });
 
             modelBuilder.Entity("WarehouseManagementSystem.Models.Customer", b =>

@@ -13,6 +13,7 @@ namespace WarehouseManagementSystem.Models
         public User User { get; set; } = null!;
         [ForeignKey(nameof(User))]
         public int UserId { get; set; }
+        public required List<InvoiceItem> InvoiceItems { get; set; } = new List<InvoiceItem>();
 
     }
 }

@@ -32,6 +32,12 @@ namespace WarehouseManagementSystem.Contract.BaseRepository
             return t;
         }
 
+        public async Task<T> FindAsync(Expression<Func<T, bool>> criteria)
+        {
+            return await _DbSet.SingleOrDefaultAsync(criteria);
+        }
+
+
         public async Task<T> AddAsync(T entity)
         {
             await _DbSet.AddAsync(entity);

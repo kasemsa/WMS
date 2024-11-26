@@ -2,62 +2,73 @@
 {
     public class BaseResponse<T>
     {
+        // Default Constructor
         public BaseResponse()
         {
-            success = true;
-        }
-        public BaseResponse(string message)
-        {
-            success = true;
-            statusCode = 200;
-            this.message = message;
+            Success = true;
+            StatusCode = 200;
+            Message = string.Empty;
         }
 
-        public BaseResponse(string message, bool success, int statusCode)
+        // Constructor for simple success message
+        public BaseResponse(string message, bool success = true, int statusCode = 200)
         {
-            this.success = success;
-            this.statusCode = statusCode;
-            this.message = message;
+            Success = success;
+            StatusCode = statusCode;
+            Message = message;
         }
-        public BaseResponse(string message, bool success, int statusCode, T data)
+
+        // Constructor for data with optional pagination and metadata
+        public BaseResponse(string message, bool success, int statusCode, T data, Pagination? pagination = null, int totalItem = 0, int? unreadMessages = null)
         {
-            this.statusCode = statusCode;
-            this.success = success;
-            this.message = message;
-            this.data = data;
+            Success = success;
+            StatusCode = statusCode;
+            Message = message;
+            Data = data;
+            Pagination = pagination;
+            TotalItem = totalItem;
+            CountOfUnReadingMessages = unreadMessages;
         }
-        public BaseResponse(string message, bool success, int statusCode, T data, int count)
-        {
-            this.statusCode = statusCode;
-            this.success = success;
-            this.message = message;
-            this.data = data;
-            this.totalItem = count;
-        }
-        public BaseResponse(string message, bool success, int statusCode, T data, Pagination? pagination)
-        {
-            this.statusCode = statusCode;
-            this.success = success;
-            this.message = message;
-            this.data = data;
-            this.pagination = pagination;
-        }
-        public BaseResponse(string message, bool success, int statusCode, T data, Pagination? pagination, int CountOfUnReadingMessages)
-        {
-            this.statusCode = statusCode;
-            this.success = success;
-            this.message = message;
-            this.data = data;
-            this.pagination = pagination;
-            this.CountOfUnReadingMessages = CountOfUnReadingMessages;
-        }
-        public bool success { get; set; }
-        public int statusCode { get; set; }
-        public string message { get; set; } = string.Empty;
-        public int totalItem { get; set; }
-        public T? data { get; set; }
+
+        // Properties
+        /// <summary>
+        /// Indicates the success of the operation.
+        /// </summary>
+        public bool Success { get; set; }
+
+        /// <summary>
+        /// HTTP status code.
+        /// </summary>
+        public int StatusCode { get; set; }
+
+        /// <summary>
+        /// Message providing additional context about the response.
+        /// </summary>
+        public string Message { get; set; } = string.Empty;
+
+        /// <summary>
+        /// Total number of items (useful for paginated responses).
+        /// </summary>
+        public int TotalItem { get; set; } = 0;
+
+        /// <summary>
+        /// The response data.
+        /// </summary>
+        public T? Data { get; set; }
+
+        /// <summary>
+        /// Count of unread messages (optional).
+        /// </summary>
         public int? CountOfUnReadingMessages { get; set; }
-        public List<string>? validationErrors { get; set; }
-        public Pagination? pagination { get; set; }
+
+        /// <summary>
+        /// List of validation errors (if any).
+        /// </summary>
+        public List<string>? ValidationErrors { get; set; } = new();
+
+        /// <summary>
+        /// Pagination metadata.
+        /// </summary>
+        public Pagination? Pagination { get; set; }
     }
 }

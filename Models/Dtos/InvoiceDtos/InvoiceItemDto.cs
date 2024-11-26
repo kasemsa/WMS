@@ -6,7 +6,7 @@ namespace WarehouseManagementSystem.Models.Dtos.InvoiceDtos
     {
         public int Quantity { get; set; }
         public Unit Unit { get; set; }
-        public decimal Price { get; set; } = 0;
+        public decimal Price { get; set; }
         public int ProductId { get; set; }
     }
 }

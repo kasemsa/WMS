@@ -6,8 +6,6 @@ namespace WarehouseManagementSystem.Models
     public class PurchaseInvoice : AuditableEntity
     {
         public int Id { get; set; }
-        public decimal InvoiceTotal { get; set; }
-
         public Customer Commissary { get; set; } = null!;
         [ForeignKey(nameof(Commissary))]
         public int CommissaryId { get; set; }

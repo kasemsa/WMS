@@ -4,6 +4,7 @@ using WarehouseManagementSystem.Contract.BaseRepository;
 using WarehouseManagementSystem.Models;
 using WarehouseManagementSystem.Models.Constants;
 using WarehouseManagementSystem.Models.Dtos.InvoiceDtos;
+using WarehouseManagementSystem.Models.Responses;
 
 namespace WarehouseManagementSystem.Controllers
 {
@@ -37,37 +38,83 @@ namespace WarehouseManagementSystem.Controllers
         #endregion
 
         #region Get
-        [HttpGet("{id}")]
-        public async Task<IActionResult> GetSalesInvoiceById(int id)
+        [HttpGet("sales/{id}")]
+        public async Task<BaseResponse<SalesInvoiceDto>> GetSalesInvoiceById(int id)
         {
             var salesInvoice = await _salesInvoiceRepository.GetByIdAsync(id);
 
             if (salesInvoice == null)
             {
-                return NotFound($"Sales invoice with ID {id} not found.");
+                return new BaseResponse<SalesInvoiceDto>(
+                    message: $"Sales invoice with ID {id} not found.",
+                    success: false,
+                    statusCode: 404,
+                    data: null
+                );
             }
 
             var salesInvoiceDto = _mapper.Map<SalesInvoiceDto>(salesInvoice);
 
-            return Ok(salesInvoiceDto);
+            return new BaseResponse<SalesInvoiceDto>(
+                message: "Sales invoice retrieved successfully.",
+                success: true,
+                statusCode: 200,
+                data: salesInvoiceDto
+            );
         }
+
+        [HttpGet("purchase/{id}")]
+        public async Task<BaseResponse<PurchaseInvoiceDto>> GetPurchaseInvoiceById(int id)
+        {
+            var purchaseInvoice = await _purchaseInvoiceRepository.GetByIdAsync(id);
+
+            if (purchaseInvoice == null)
+            {
+                return new BaseResponse<PurchaseInvoiceDto>(
+                    message: $"Purchase invoice with ID {id} not found.",
+                    success: false,
+                    statusCode: 404,
+                    data: null
+                );
+            }
+
+            var purchaseInvoiceDto = _mapper.Map<PurchaseInvoiceDto>(purchaseInvoice);
+
+            return new BaseResponse<PurchaseInvoiceDto>(
+                message: "Purchase invoice retrieved successfully.",
+                success: true,
+                statusCode: 200,
+                data: purchaseInvoiceDto
+            );
+        }
+
+
+
         #endregion
 
         #region Refund 
         [HttpPost("refund/sales/{id}")]
-        public async Task<IActionResult> RefundInvoice(int id)
+        public async Task<BaseResponse<string>> RefundInvoice(int id)
         {
             // Retrieve the invoice
             var invoice = await _salesInvoiceRepository.GetByIdAsync(id);
             if (invoice == null)
             {
-                return NotFound($"Invoice with ID {id} not found.");
+                return new BaseResponse<string>(
+                    message: $"Invoice with ID {id} not found.",
+                    success: false,
+                    statusCode: 404
+                );
             }
 
             // Check if already refunded
             if (invoice.Refunded)
             {
-                return BadRequest("Invoice has already been refunded.");
+                return new BaseResponse<string>(
+                    message: "Invoice has already been refunded.",
+                    success: false,
+                    statusCode: 400
+                );
             }
 
             // Adjust Customer Balance
@@ -75,9 +122,7 @@ namespace WarehouseManagementSystem.Controllers
             customer.Balance -= invoice.CurrentBalance; // Reverse the balance impact
             await _customerRepository.UpdateAsync(customer);
 
-            // Adjust Commissary Balance
             var commissary = invoice.Commissary;
-            commissary.Balance -= invoice.InvoiceTotal; // Reverse the commissary's earnings
 
             // Return products to commissary's stock
             foreach (var item in invoice.InvoiceItems)
@@ -109,78 +154,94 @@ namespace WarehouseManagementSystem.Controllers
             invoice.Refunded = true;
             await _salesInvoiceRepository.UpdateAsync(invoice);
 
-            return Ok("Invoice refunded successfully. Products returned to the commissary.");
+            return new BaseResponse<string>(
+                message: "Invoice refunded successfully. Products returned to the commissary.",
+                success: true,
+                statusCode: 200
+            );
         }
 
+
+
         [HttpPost("refund/sales")]
-        public async Task<IActionResult> RefundPartialInvoice([FromBody] RefundItemDto input)
+        public async Task<BaseResponse<string>> RefundPartialInvoice([FromBody] RefundItemDto input)
         {
             // Retrieve the customer based on CustomerId
-            var customer = await _customerRepository.GetByIdAsync(input.CustomerId)
-                ?? throw new ArgumentException($"Customer with ID {input.CustomerId} not found.");
+            var customer = await _customerRepository.GetByIdAsync(input.CustomerId);
+            if (customer == null)
+            {
+                return new BaseResponse<string>(
+                    message: $"Customer with ID {input.CustomerId} not found.",
+                    success: false,
+                    statusCode: 404
+                );
+            }
 
-            var commissary = await GetCommissaryById(input.CommissaryId)
-                ?? throw new ArgumentException($"Commissary with ID {input.CommissaryId} not found.");
+            var commissary = await GetCommissaryById(input.CommissaryId);
+            if (commissary == null)
+            {
+                return new BaseResponse<string>(
+                    message: $"Commissary with ID {input.CommissaryId} not found.",
+                    success: false,
+                    statusCode: 404
+                );
+            }
 
-            // List to store the details of the products that will be refunded
             decimal totalRefundAmount = 0;
 
             // Iterate through each item in the refund request
             foreach (var refundItem in input.InvoiceItems)
             {
-                // Calculate total purchased quantity of the product in base units (PIECE)
                 var totalPurchasedQuantity = customer.SalesInvoices
                     .SelectMany(invoice => invoice.InvoiceItems)
                     .Where(item => item.ProductId == refundItem.ProductId)
                     .Sum(item => item.Quantity * (int)item.Unit); // Convert all quantities to base units
 
-                // Convert the requested refund quantity to base units
                 var refundQuantity = refundItem.Quantity * (int)refundItem.Unit;
 
-                // Check if the customer purchased the product
                 if (totalPurchasedQuantity == 0)
                 {
-                    return BadRequest($"Product ID {refundItem.ProductId} was not purchased by the customer.");
+                    return new BaseResponse<string>(
+                        message: $"Product ID {refundItem.ProductId} was not purchased by the customer.",
+                        success: false,
+                        statusCode: 400
+                    );
                 }
 
-                // Check if the requested refund quantity exceeds the purchased quantity
                 if (refundQuantity > totalPurchasedQuantity)
                 {
-                    return BadRequest($"Refund quantity exceeds the purchased quantity for Product ID {refundItem.ProductId}.");
+                    return new BaseResponse<string>(
+                        message: $"Refund quantity exceeds the purchased quantity for Product ID {refundItem.ProductId}.",
+                        success: false,
+                        statusCode: 400
+                    );
                 }
 
-                // Get all invoices that contain the product (for refund processing)
                 var productInvoices = customer.SalesInvoices
                     .SelectMany(invoice => invoice.InvoiceItems)
                     .Where(item => item.ProductId == refundItem.ProductId)
-                    .OrderByDescending(item => item.Quantity * (int)item.Unit) // Prioritize larger units
+                    .OrderByDescending(item => item.Quantity * (int)item.Unit)
                     .ToList();
 
                 decimal refundAmount = 0;
                 foreach (var invoiceItem in productInvoices)
                 {
-                    if (refundQuantity == 0)
-                        break; // Exit once we have refunded the full requested quantity
+                    if (refundQuantity == 0) break;
 
-                    // Convert invoice item's quantity to base units
                     var invoiceItemQuantity = invoiceItem.Quantity * (int)invoiceItem.Unit;
 
-                    // Calculate how much of this product can be refunded from this invoice
                     var quantityToRefund = Math.Min(invoiceItemQuantity, refundQuantity);
-
-                    // Convert refunded quantity back to the original unit for updating inventory
                     var quantityToRefundInOriginalUnit = quantityToRefund / (int)invoiceItem.Unit;
 
-                    refundAmount += quantityToRefund * (invoiceItem.Price / (int)invoiceItem.Unit); // Adjust price based on unit
+                    refundAmount += quantityToRefund * (invoiceItem.Price / (int)invoiceItem.Unit);
 
-                    refundQuantity -= quantityToRefund;  // Decrease the remaining quantity to be refunded
+                    refundQuantity -= quantityToRefund;
 
-                    // Restocking logic: Add refunded quantity back to the commissary inventory
                     var commissaryItem = commissary.InvoiceItems
                         .FirstOrDefault(ci => ci.ProductId == refundItem.ProductId);
                     if (commissaryItem != null)
                     {
-                        commissaryItem.Quantity += quantityToRefundInOriginalUnit; // Increase commissary stock
+                        commissaryItem.Quantity += quantityToRefundInOriginalUnit;
                     }
                     else
                     {
@@ -188,7 +249,7 @@ namespace WarehouseManagementSystem.Controllers
                         {
                             ProductId = refundItem.ProductId,
                             Quantity = quantityToRefundInOriginalUnit,
-                            Unit = invoiceItem.Unit,  // Maintain the unit from the original sale
+                            Unit = invoiceItem.Unit,
                             Price = invoiceItem.Price
                         });
                     }
@@ -197,258 +258,380 @@ namespace WarehouseManagementSystem.Controllers
                 totalRefundAmount += refundAmount;
             }
 
-            // Adjust balances for the customer and commissary
             customer.Balance -= totalRefundAmount;
-            commissary.Balance -= totalRefundAmount;
 
-            // Save the updated records
             await _customerRepository.UpdateAsync(customer);
             await _commissaryRepository.UpdateAsync(commissary);
 
-            return Ok(new { message = "Partial refund processed successfully." });
+            return new BaseResponse<string>(
+                message: "Partial refund processed successfully.",
+                success: true,
+                statusCode: 200
+            );
         }
 
         [HttpPost("refund/purchase")]
-        public async Task<IActionResult> RefundPurchase([FromBody] CreatePurchaseInvoiceDto refundRequest)
+        public async Task<BaseResponse<string>> RefundPurchase([FromBody] CreatePurchaseInvoiceDto refundRequest)
         {
-            // Retrieve commissary
             var commissary = await _commissaryRepository.GetByIdAsync(refundRequest.CommissaryId);
             if (commissary == null)
-                return NotFound($"Commissary with ID {refundRequest.CommissaryId} not found.");
+            {
+                return new BaseResponse<string>(
+                    message: $"Commissary with ID {refundRequest.CommissaryId} not found.",
+                    success: false,
+                    statusCode: 404
+                );
+            }
 
             decimal totalRefundAmount = 0;
 
             foreach (var refundItem in refundRequest.InvoiceItems)
             {
                 if (refundItem.Quantity <= 0)
-                    return BadRequest($"Invalid quantity for Product ID {refundItem.ProductId}. Quantity must be greater than zero.");
+                {
+                    return new BaseResponse<string>(
+                        message: $"Invalid quantity for Product ID {refundItem.ProductId}. Quantity must be greater than zero.",
+                        success: false,
+                        statusCode: 400
+                    );
+                }
 
-                // Find the product in the commissary's inventory
                 var inventoryItem = commissary.InvoiceItems
                     .FirstOrDefault(item => item.ProductId == refundItem.ProductId);
 
                 if (inventoryItem == null)
-                    return BadRequest($"Product ID {refundItem.ProductId} not found in Commissary inventory.");
+                {
+                    return new BaseResponse<string>(
+                        message: $"Product ID {refundItem.ProductId} not found in Commissary inventory.",
+                        success: false,
+                        statusCode: 400
+                    );
+                }
 
-                // Convert refund quantity to base unit (PIECE)
                 int refundQuantityInBaseUnit = refundItem.Quantity * (int)refundItem.Unit;
 
-
-                // Calculate refund amount
                 decimal refundAmount = inventoryItem.Price * refundQuantityInBaseUnit;
                 totalRefundAmount += refundAmount;
 
-                // Deduct the quantity from commissary's inventory
                 inventoryItem.Quantity -= refundQuantityInBaseUnit;
 
-                // If the quantity becomes zero, optionally remove the item
                 if (inventoryItem.Quantity == 0)
                 {
                     commissary.InvoiceItems.Remove(inventoryItem);
                 }
             }
 
-            // Update commissary balance
-            commissary.Balance += totalRefundAmount;
-
-            // Save the changes
             await _commissaryRepository.UpdateAsync(commissary);
 
-            return Ok(new
-            {
-                Message = "Purchase refund processed successfully.",
-                TotalRefundAmount = totalRefundAmount
-            });
+            return new BaseResponse<string>(
+                message: "Purchase refund processed successfully.",
+                success: true,
+                statusCode: 200
+            );
         }
+
 
         #endregion
 
         #region Create
 
-        public async Task<SalesInvoiceDto> CreateSalesInvoice([FromForm] CreateSelesInvoiceDto input)
+        public async Task<BaseResponse<SalesInvoiceDto>> CreateSalesInvoice([FromForm] CreateSelesInvoiceDto input)
         {
-            // Validate customer existence
-            var customer = await GetCustomerById(input.CustomerId)
-                ?? throw new ArgumentException($"Customer with ID {input.CustomerId} not found.");
-
-            // Validate commissary existence
-            var commissary = await GetCommissaryById(input.CommissaryId)
-                ?? throw new ArgumentException($"Commissary with ID {input.CommissaryId} not found.");
-
-            // Validate product existence and commissary stock
-            foreach (var item in input.InvoiceItems)
+            try
             {
-                var product = await _productRepository.GetByIdAsync(item.ProductId)
-                    ?? throw new ArgumentException($"Product with ID {item.ProductId} not found.");
+                // Validate customer existence
+                var customer = await GetCustomerById(input.CustomerId);
+                if (customer == null)
+                {
+                    return new BaseResponse<SalesInvoiceDto>(
+                        message: $"Customer with ID {input.CustomerId} not found.",
+                        success: false,
+                        statusCode: 404
+                    );
+                }
 
-                // Check if the commissary has enough stock in terms of the product's unit
-                var commissaryStock = commissary.InvoiceItems
-                    .FirstOrDefault(ci => ci.ProductId == item.ProductId);
+                // Validate commissary existence
+                var commissary = await GetCommissaryById(input.CommissaryId);
+                if (commissary == null)
+                {
+                    return new BaseResponse<SalesInvoiceDto>(
+                        message: $"Commissary with ID {input.CommissaryId} not found.",
+                        success: false,
+                        statusCode: 404
+                    );
+                }
 
-                if (commissaryStock == null || commissaryStock.Quantity * (int)commissaryStock.Unit < item.Quantity * (int)item.Unit)
-                    throw new ArgumentException($"Not enough stock for Product ID {item.ProductId} in Commissary ID {input.CommissaryId}. Requested quantity exceeds available stock.");
+                // Validate product existence and commissary stock
+                foreach (var item in input.InvoiceItems)
+                {
+                    var product = await _productRepository.GetByIdAsync(item.ProductId);
+                    if (product == null)
+                    {
+                        return new BaseResponse<SalesInvoiceDto>(
+                            message: $"Product with ID {item.ProductId} not found.",
+                            success: false,
+                            statusCode: 404
+                        );
+                    }
 
-                // Deduct the quantity from the commissary stock
-                commissaryStock.Quantity -= item.Quantity * (int)item.Unit; // Adjust for unit multiplier
+                    // Check if the commissary has enough stock in terms of the product's unit
+                    var commissaryStock = commissary.InvoiceItems
+                        .FirstOrDefault(ci => ci.ProductId == item.ProductId);
+
+                    if (commissaryStock == null || commissaryStock.Quantity * (int)commissaryStock.Unit < item.Quantity * (int)item.Unit)
+                    {
+                        return new BaseResponse<SalesInvoiceDto>(
+                            message: $"Not enough stock for Product ID {item.ProductId} in Commissary ID {input.CommissaryId}. Requested quantity exceeds available stock.",
+                            success: false,
+                            statusCode: 400
+                        );
+                    }
+
+                    // Deduct the quantity from the commissary stock
+                    commissaryStock.Quantity -= item.Quantity * (int)item.Unit; // Adjust for unit multiplier
+                }
+
+                // Calculate total price and discount
+                var totalProductsPrice = CalculateTotalProductsPrice(input.InvoiceItems);
+                var discountAmount = CalculateDiscount(input.DiscountType, input.DiscountValue, totalProductsPrice);
+                var invoiceTotal = totalProductsPrice - discountAmount;
+
+                // Calculate balances
+                var previousBalance = customer.Balance;
+                var currentBalance = CalculateCurrentBalance(previousBalance, invoiceTotal, input.Payment);
+
+                // Create sales invoice entity
+                var salesInvoice = CreateSalesInvoiceEntity(input, totalProductsPrice, discountAmount, invoiceTotal, previousBalance, currentBalance);
+
+                // Update customer balance
+                await UpdateCustomerBalance(customer, currentBalance);
+
+                // Update commissary balance
+
+                // Save commissary updates
+                await _commissaryRepository.UpdateAsync(commissary);
+
+                // Save the sales invoice
+                await _salesInvoiceRepository.AddAsync(salesInvoice);
+                await _salesInvoiceRepository.UpdateAsync(salesInvoice);
+
+                // Return the sales invoice DTO
+                var salesInvoiceDto = _mapper.Map<SalesInvoiceDto>(salesInvoice);
+                return new BaseResponse<SalesInvoiceDto>(
+                    message: "Sales invoice created successfully.",
+                    success: true,
+                    statusCode: 201,
+                    data: salesInvoiceDto
+                );
             }
-
-            // Calculate total price and discount
-            var totalProductsPrice = CalculateTotalProductsPrice(input.InvoiceItems);
-            var discountAmount = CalculateDiscount(input.DiscountType, input.DiscountValue, totalProductsPrice);
-            var invoiceTotal = totalProductsPrice - discountAmount;
-
-            // Calculate balances
-            var previousBalance = customer.Balance;
-            var currentBalance = CalculateCurrentBalance(previousBalance, invoiceTotal, input.Payment);
-
-            // Create sales invoice entity
-            var salesInvoice = CreateSalesInvoiceEntity(input, totalProductsPrice, discountAmount, invoiceTotal, previousBalance, currentBalance);
-
-            // Update customer balance
-            await UpdateCustomerBalance(customer, currentBalance);
-
-            // Update commissary balance
-            commissary.Balance += invoiceTotal - input.Payment;
-
-            // Save commissary updates
-            await _commissaryRepository.UpdateAsync(commissary);
-
-            // Save the sales invoice
-            await _salesInvoiceRepository.AddAsync(salesInvoice);
-            await _salesInvoiceRepository.UpdateAsync(salesInvoice);
-
-            // Return the sales invoice DTO
-            return _mapper.Map<SalesInvoiceDto>(salesInvoice);
+            catch (Exception ex)
+            {
+                // Log exception here if needed
+                return new BaseResponse<SalesInvoiceDto>(
+                    message: $"An error occurred: {ex.Message}",
+                    success: false,
+                    statusCode: 500
+                );
+            }
         }
 
 
+
         [HttpPost("purchase")]
-        public async Task<PurchaseInvoiceDto> CreatePurchaseInvoice([FromBody] CreatePurchaseInvoiceDto input)
+        public async Task<BaseResponse<PurchaseInvoiceDto>> CreatePurchaseInvoice([FromBody] CreatePurchaseInvoiceDto input)
         {
-            if (input.InvoiceItems.Count == 0)
-                throw new ArgumentException("The invoice must include at least one item.");
-
-            // Validate Commissary
-            var commissary = await _commissaryRepository.GetByIdAsync(input.CommissaryId)
-             ?? throw new ArgumentException($"Commissary with ID {input.CommissaryId} not found.");
-
-
-            // Initialize variables for processing
-            var invoiceItems = new List<InvoiceItem>();
-            decimal invoiceTotal = 0;
-
-            foreach (var item in input.InvoiceItems)
+            try
             {
-                // Validate Product
-                var product = await _productRepository.GetByIdAsync(item.ProductId)
-                    ?? throw new ArgumentException($"Product with ID {item.ProductId} not found.");
-
-
-                // Calculate unit price and invoice total
-                decimal unitPrice = product.Price;
-                decimal totalItemPrice = unitPrice * item.Quantity * (int)item.Unit;
-                invoiceTotal += totalItemPrice;
-
-                // Prepare the invoice item
-                invoiceItems.Add(new InvoiceItem
+                if (input.InvoiceItems.Count == 0)
                 {
-                    ProductId = item.ProductId,
-                    Quantity = item.Quantity,
-                    Unit = item.Unit,
-                    Price = unitPrice,
-                    PurchaseInvoiceId = null
-                });
-            }
-
-            // Update Commissary Balance
-            commissary.Balance -= invoiceTotal;
-
-            // Update Commissary Inventory
-            foreach (var invoiceItem in invoiceItems)
-            {
-                var existingItem = commissary.InvoiceItems
-                    .FirstOrDefault(ci => ci.ProductId == invoiceItem.ProductId);
-
-                if (existingItem != null)
-                {
-                    int existingQuantityInBaseUnit = existingItem.Quantity * (int)existingItem.Unit;
-
-                    // Convert new quantity to base unit (PIECE)
-                    int newQuantityInBaseUnit = invoiceItem.Quantity * (int)invoiceItem.Unit;
-
-                    // Add quantities in base unit
-                    int totalQuantityInBaseUnit = existingQuantityInBaseUnit + newQuantityInBaseUnit;
-
-                    // Convert back to the original unit of the existing item
-                    existingItem.Quantity = totalQuantityInBaseUnit / (int)existingItem.Unit;
-                    existingItem.Quantity += invoiceItem.Quantity;
+                    return new BaseResponse<PurchaseInvoiceDto>(
+                        message: "The invoice must include at least one item.",
+                        success: false,
+                        statusCode: 400
+                    );
                 }
-                else
+
+                // Validate Commissary
+                var commissary = await _commissaryRepository.GetByIdAsync(input.CommissaryId);
+                if (commissary == null)
                 {
-                    commissary.InvoiceItems.Add(new InvoiceItem
+                    return new BaseResponse<PurchaseInvoiceDto>(
+                        message: $"Commissary with ID {input.CommissaryId} not found.",
+                        success: false,
+                        statusCode: 404
+                    );
+                }
+
+                // Initialize variables for processing
+                var invoiceItems = new List<InvoiceItem>();
+
+                foreach (var item in input.InvoiceItems)
+                {
+                    // Validate Product
+                    var product = await _productRepository.GetByIdAsync(item.ProductId);
+                    if (product == null)
                     {
-                        ProductId = invoiceItem.ProductId,
-                        Quantity = invoiceItem.Quantity,
-                        Unit = invoiceItem.Unit,
-                        Price = invoiceItem.Price
+                        return new BaseResponse<PurchaseInvoiceDto>(
+                            message: $"Product with ID {item.ProductId} not found.",
+                            success: false,
+                            statusCode: 404
+                        );
+                    }
+
+                    // Prepare the invoice item
+                    invoiceItems.Add(new InvoiceItem
+                    {
+                        ProductId = item.ProductId,
+                        Quantity = item.Quantity,
+                        Unit = item.Unit,
+                        PurchaseInvoiceId = null
                     });
                 }
+
+                // Update Commissary Inventory
+                foreach (var invoiceItem in invoiceItems)
+                {
+                    var existingItem = commissary.InvoiceItems
+                        .FirstOrDefault(ci => ci.ProductId == invoiceItem.ProductId);
+
+                    if (existingItem != null)
+                    {
+                        int existingQuantityInBaseUnit = existingItem.Quantity * (int)existingItem.Unit;
+
+                        // Convert new quantity to base unit (PIECE)
+                        int newQuantityInBaseUnit = invoiceItem.Quantity * (int)invoiceItem.Unit;
+
+                        // Add quantities in base unit
+                        int totalQuantityInBaseUnit = existingQuantityInBaseUnit + newQuantityInBaseUnit;
+
+                        // Convert back to the original unit of the existing item
+                        existingItem.Quantity = totalQuantityInBaseUnit / (int)existingItem.Unit;
+                        existingItem.Quantity += invoiceItem.Quantity;
+                    }
+                    else
+                    {
+                        commissary.InvoiceItems.Add(new InvoiceItem
+                        {
+                            ProductId = invoiceItem.ProductId,
+                            Quantity = invoiceItem.Quantity,
+                            Unit = invoiceItem.Unit,
+                            Price = invoiceItem.Price
+                        });
+                    }
+                }
+
+                // Save the Purchase Invoice
+                var purchaseInvoice = new PurchaseInvoice
+                {
+                    CommissaryId = commissary.Id,
+                    InvoiceItems = invoiceItems
+                };
+
+                await _purchaseInvoiceRepository.AddAsync(purchaseInvoice);
+                await _commissaryRepository.UpdateAsync(commissary);
+
+                var purchaseInvoiceDto = _mapper.Map<PurchaseInvoiceDto>(purchaseInvoice);
+
+                return new BaseResponse<PurchaseInvoiceDto>(
+                    message: "Purchase invoice created successfully.",
+                    success: true,
+                    statusCode: 201,
+                    data: purchaseInvoiceDto
+                );
             }
-
-            // Save the Purchase Invoice
-            var purchaseInvoice = new PurchaseInvoice
+            catch (Exception ex)
             {
-                CommissaryId = commissary.Id,
-                InvoiceTotal = invoiceTotal,
-                InvoiceItems = invoiceItems
-            };
-
-            await _purchaseInvoiceRepository.AddAsync(purchaseInvoice);
-            await _commissaryRepository.UpdateAsync(commissary);
-
-            return _mapper.Map<PurchaseInvoiceDto>(purchaseInvoice);
+                // Log the exception as needed
+                return new BaseResponse<PurchaseInvoiceDto>(
+                    message: $"An error occurred: {ex.Message}",
+                    success: false,
+                    statusCode: 500
+                );
+            }
         }
 
         #endregion
 
         #region Update
-        public async Task<IActionResult> UpdateSalesInvoice(int id, [FromForm] CreateSelesInvoiceDto input)
+        public async Task<BaseResponse<SalesInvoiceDto>> UpdateSalesInvoice(int id, [FromForm] CreateSelesInvoiceDto input)
         {
-            var salesInvoice = await _salesInvoiceRepository.GetByIdAsync(id);
-            if (salesInvoice == null)
-                return NotFound($"Sales invoice with ID {id} not found.");
+            try
+            {
+                var salesInvoice = await _salesInvoiceRepository.GetByIdAsync(id);
+                if (salesInvoice == null)
+                {
+                    return new BaseResponse<SalesInvoiceDto>(
+                        message: $"Sales invoice with ID {id} not found.",
+                        success: false,
+                        statusCode: 404
+                    );
+                }
 
-            var customer = await GetCustomerById(input.CustomerId);
-            if (customer == null)
-                return NotFound($"Customer with ID {input.CustomerId} not found.");
+                var customer = await GetCustomerById(input.CustomerId);
+                if (customer == null)
+                {
+                    return new BaseResponse<SalesInvoiceDto>(
+                        message: $"Customer with ID {input.CustomerId} not found.",
+                        success: false,
+                        statusCode: 404
+                    );
+                }
 
-            var commissary = await GetCommissaryById(input.CommissaryId);
-            if (commissary == null)
-                return NotFound($"Commissary with ID {input.CommissaryId} not found.");
+                var commissary = await GetCommissaryById(input.CommissaryId);
+                if (commissary == null)
+                {
+                    return new BaseResponse<SalesInvoiceDto>(
+                        message: $"Commissary with ID {input.CommissaryId} not found.",
+                        success: false,
+                        statusCode: 404
+                    );
+                }
 
-            var missingProducts = await GetMissingProducts(input.InvoiceItems);
-            if (missingProducts.Any())
-                return NotFound($"The following products are missing: {string.Join(", ", missingProducts)}");
+                var missingProducts = await GetMissingProducts(input.InvoiceItems);
+                if (missingProducts.Any())
+                {
+                    return new BaseResponse<SalesInvoiceDto>(
+                        message: $"The following products are missing: {string.Join(", ", missingProducts)}",
+                        success: false,
+                        statusCode: 404
+                    );
+                }
 
-            var totalProductsPrice = CalculateTotalProductsPrice(input.InvoiceItems);
-            var discountAmount = CalculateDiscount(input.DiscountType, input.DiscountValue, totalProductsPrice);
-            var invoiceTotal = totalProductsPrice - discountAmount;
+                var totalProductsPrice = CalculateTotalProductsPrice(input.InvoiceItems);
+                var discountAmount = CalculateDiscount(input.DiscountType, input.DiscountValue, totalProductsPrice);
+                var invoiceTotal = totalProductsPrice - discountAmount;
 
-            var previousBalance = customer.Balance + salesInvoice.InvoiceTotal - salesInvoice.Payment;
-            var currentBalance = CalculateCurrentBalance(previousBalance, invoiceTotal, input.Payment);
+                var previousBalance = customer.Balance + salesInvoice.InvoiceTotal - salesInvoice.Payment;
+                var currentBalance = CalculateCurrentBalance(previousBalance, invoiceTotal, input.Payment);
 
-            _mapper.Map(input, salesInvoice);
-            salesInvoice.TotalProductsPrice = totalProductsPrice;
-            salesInvoice.InvoiceTotal = invoiceTotal;
-            salesInvoice.PreviousBalance = previousBalance;
-            salesInvoice.CurrentBalance = currentBalance;
+                _mapper.Map(input, salesInvoice);
+                salesInvoice.TotalProductsPrice = totalProductsPrice;
+                salesInvoice.InvoiceTotal = invoiceTotal;
+                salesInvoice.PreviousBalance = previousBalance;
+                salesInvoice.CurrentBalance = currentBalance;
 
-            await UpdateCustomerBalance(customer, currentBalance);
-            await _salesInvoiceRepository.UpdateAsync(salesInvoice);
+                await UpdateCustomerBalance(customer, currentBalance);
+                await _salesInvoiceRepository.UpdateAsync(salesInvoice);
 
-            var salesInvoiceDto = _mapper.Map<SalesInvoiceDto>(salesInvoice);
-            return Ok(salesInvoiceDto);
+                var salesInvoiceDto = _mapper.Map<SalesInvoiceDto>(salesInvoice);
+                return new BaseResponse<SalesInvoiceDto>(
+                    message: "Sales invoice updated successfully.",
+                    success: true,
+                    statusCode: 200,
+                    data: salesInvoiceDto
+                );
+            }
+            catch (Exception ex)
+            {
+                // Log the exception as needed
+                return new BaseResponse<SalesInvoiceDto>(
+                    message: $"An error occurred: {ex.Message}",
+                    success: false,
+                    statusCode: 500
+                );
+            }
         }
+
         #endregion
 
         #region Private Methods

@@ -14,8 +14,7 @@ namespace WarehouseManagementSystem
                 .ForMember(dest => dest.InvoiceItems, opt => opt.MapFrom(src => src.InvoiceItems))
                 .ForMember(dest => dest.QRCodeContent, opt => opt.MapFrom(src => $"InvoiceId: {src.Id}"));
 
-
-            CreateMap<SalesInvoice, SalesInvoiceDto>();
+            CreateMap<PurchaseInvoice, PurchaseInvoiceDto>().ReverseMap();
         }
     }
 }

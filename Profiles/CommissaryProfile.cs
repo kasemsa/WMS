@@ -22,9 +22,8 @@ namespace WarehouseManagementSystem.Profiles
             // Mapping for updating an existing Commissary with UpdateCommissaryDto
             CreateMap<UpdateCommissaryDto, Commissary>()
                 .ForMember(dest => dest.Name, opt => opt.Condition(src => src.Name != null))
-                .ForMember(dest => dest.PhoneNumber, opt => opt.Condition(src => src.PhoneNumber != null))
-                .ForMember(dest => dest.Balance, opt => opt.Condition(src => src.Balance.HasValue))
-                .ForMember(dest => dest.Balance, opt => opt.MapFrom(src => src.Balance.GetValueOrDefault()));
+                .ForMember(dest => dest.PhoneNumber, opt => opt.Condition(src => src.PhoneNumber != null));
+
 
             // Mapping Commissary to CommissaryDto for read-only data retrieval
             CreateMap<Commissary, CommissaryDto>();

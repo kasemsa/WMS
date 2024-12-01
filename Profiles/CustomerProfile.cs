@@ -6,7 +6,7 @@ namespace WarehouseManagementSystem.Profiles
 {
     public class CustomerProfile : Profile
     {
-        CustomerProfile()
+        public CustomerProfile()
         {
             CreateMap<Customer, CustomerDto>()
             .ForMember(dest => dest.SalesInvoiceIds, opt => opt.MapFrom(src => src.SalesInvoices.Select(si => si.Id)));

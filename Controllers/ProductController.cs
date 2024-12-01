@@ -2,7 +2,7 @@
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using WarehouseManagementSystem.Contract.BaseRepository;
-using WarehouseManagementSystem.Contract.FileService;
+using WarehouseManagementSystem.Contract.FileServices;
 using WarehouseManagementSystem.Models;
 using WarehouseManagementSystem.Models.Common;
 using WarehouseManagementSystem.Models.Constants;

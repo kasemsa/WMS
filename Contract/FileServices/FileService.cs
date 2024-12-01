@@ -1,14 +1,13 @@
 ﻿
 using Microsoft.VisualBasic.FileIO;
 
-namespace WarehouseManagementSystem.Contract.FileService
+namespace WarehouseManagementSystem.Contract.FileServices
 {
     public class FileService : IFileService
     {
         private readonly string _SavePath;
-        private readonly IHttpContextAccessor _httpContextAccessor;
 
-        public FileService(IWebHostEnvironment environment, IHttpContextAccessor httpContextAccessor)
+        public FileService(IWebHostEnvironment environment)
         {
             _SavePath = Path.Combine(environment.ContentRootPath + "/wwwroot", "UploadedFiles");
 
@@ -16,8 +15,6 @@ namespace WarehouseManagementSystem.Contract.FileService
             {
                 Directory.CreateDirectory(_SavePath);
             }
-
-            _httpContextAccessor = httpContextAccessor;
         }
 
         public async Task<string> SaveFileAsync(IFormFile file)

@@ -1,4 +1,4 @@
-﻿namespace WarehouseManagementSystem.Contract.FileService
+﻿namespace WarehouseManagementSystem.Contract.FileServices
 {
     public interface IFileService
     {

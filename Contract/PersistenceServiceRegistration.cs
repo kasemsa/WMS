@@ -1,5 +1,7 @@
 ﻿using Microsoft.EntityFrameworkCore;
+using System.Reflection;
 using WarehouseManagementSystem.Contract.BaseRepository;
+using WarehouseManagementSystem.Contract.FileServices;
 using WarehouseManagementSystem.DataBase;
 
 namespace WarehouseManagementSystem.Contract
@@ -12,6 +14,8 @@ namespace WarehouseManagementSystem.Contract
             services.AddDbContext<WarehouseDbContext>(options =>
                 options.UseSqlServer(connectionString: configuration.GetConnectionString("DefaultConnection")));
             services.AddScoped(typeof(IAsyncRepository<>), typeof(BaseRepository<>));
+            services.AddScoped<IFileService, FileService>();
+            services.AddAutoMapper(Assembly.GetExecutingAssembly());
             //services.AddTransient<AuthenticationMiddleware>();
 
             return services;

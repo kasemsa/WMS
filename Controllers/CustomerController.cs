@@ -4,13 +4,11 @@ using WarehouseManagementSystem.Contract.BaseRepository;
 using WarehouseManagementSystem.Models;
 using WarehouseManagementSystem.Models.Common;
 using WarehouseManagementSystem.Models.Constants;
-using WarehouseManagementSystem.Models.Dtos.CommissaryDtos;
 using WarehouseManagementSystem.Models.Dtos.CustomerDtos;
 using WarehouseManagementSystem.Models.Responses;
 
 namespace WarehouseManagementSystem.Controllers
 {
-
     [Route("api/[controller]")]
     [ApiController]
     public class CustomerController : ControllerBase
@@ -18,86 +16,92 @@ namespace WarehouseManagementSystem.Controllers
         private readonly IAsyncRepository<Customer> _customerRepository;
         private readonly IMapper _mapper;
 
-        public CustomerController(IAsyncRepository<Customer> customerRepository, IMapper mapper)
+        public CustomerController(IMapper mapper, IAsyncRepository<Customer> customerRepository)
         {
-            _customerRepository = customerRepository;
             _mapper = mapper;
-        }
-
-        // GET: api/Customer
-        //
-        //public async Task<IActionResult> GetAllCustomers()
-        //{
-        //    var customers = await _customerRepository.ListAllAsync();
-        //    var customerDtos = _mapper.Map<IEnumerable<CustomerDto>>(customers);
-        //    return Ok(customerDtos);
-        //}
-        [HttpGet("GetAllCustomers")]
-        public async Task<IActionResult> GetAllCustomers([FromQuery] IndexQuery query)
-        {
-            FilterObject filterObject = new FilterObject() { Filters = query.filters };
-
-            var Customers = await _customerRepository.GetFilterThenPagedReponseAsync(filterObject, query.page, query.perPage);
-
-            var CustomersDtos = _mapper.Map<IEnumerable<CustomerDto>>(Customers);
-
-            int Count = _customerRepository.WhereThenFilter(c => true, filterObject).Count();
-
-            Pagination pagination = new Pagination(query.page, query.perPage, Count);
-
-            return Ok(new BaseResponse<IEnumerable<CustomerDto>>("", true, 200, CustomersDtos, pagination));
-        }
-
-        [HttpGet("{id}")]
-        public async Task<IActionResult> GetCustomerById(int id)
-        {
-            var customer = await _customerRepository.GetByIdAsync(id);
-            if (customer == null)
-            {
-                return NotFound("الزبون غير موجود");
-            }
-            var customerDto = _mapper.Map<CustomerDto>(customer);
-            return Ok(customerDto);
+            _customerRepository = customerRepository;
         }
 
         [HttpPost]
-        public async Task<IActionResult> CreateCustomer([FromBody] CreateCustomerDto createCustomerDto)
+        public async Task<BaseResponse<CustomerDto>> CreateCustomer([FromBody] CreateCustomerDto customerDto)
         {
-            if (!ModelState.IsValid)
-            {
-                return BadRequest(ModelState);
-            }
+            // Check if the customer name already exists
+            bool nameExists = _customerRepository.Where(c => c.Name == customerDto.Name).Any();
+            if (nameExists)
+                return new BaseResponse<CustomerDto>("اسم العميل موجود بالفعل", success: false, statusCode: 400);
 
-            var customer = _mapper.Map<Customer>(createCustomerDto);
+            var customer = _mapper.Map<Customer>(customerDto);
             await _customerRepository.AddAsync(customer);
-            return Ok("تم إضافة الزبون بنجاح");
+            return new BaseResponse<CustomerDto>("تم إضافة العميل بنجاح");
         }
 
-        [HttpPut("{id}")]
-        public async Task<IActionResult> UpdateCustomer(int id, [FromBody] UpdateCustomerDto updateCustomerDto)
+        [HttpPut("{customerId}")]
+        public async Task<BaseResponse<CustomerDto>> UpdateCustomer([FromBody] UpdateCustomerDto customerDto, int customerId)
         {
-            var existingCustomer = await _customerRepository.GetByIdAsync(id);
-            if (existingCustomer == null)
-            {
-                return NotFound("الزبون غير موجود");
-            }
+            var customer = await _customerRepository.GetByIdAsync(customerId);
 
-            _mapper.Map(updateCustomerDto, existingCustomer);
-            await _customerRepository.UpdateAsync(existingCustomer);
-            return Ok("تم تعديل الزبون بنجاح");
-        }
-
-        [HttpDelete("{id}")]
-        public async Task<IActionResult> DeleteCustomer(int id)
-        {
-            var customer = await _customerRepository.GetByIdAsync(id);
             if (customer == null)
-            {
-                return NotFound("الزبون غير موجود");
-            }
+                return new BaseResponse<CustomerDto>("العميل غير موجود", success: false, statusCode: 404);
+
+            _mapper.Map(customerDto, customer);
+            await _customerRepository.UpdateAsync(customer);
+
+            return new BaseResponse<CustomerDto>("تم تعديل بيانات العميل بنجاح");
+        }
+
+        [HttpDelete("{customerId}")]
+        public async Task<BaseResponse<CustomerDto>> DeleteCustomer(int customerId)
+        {
+            var customer = await _customerRepository.GetByIdAsync(customerId);
+
+            if (customer == null)
+                return new BaseResponse<CustomerDto>("العميل غير موجود", success: false, statusCode: 404);
 
             await _customerRepository.DeleteAsync(customer);
-            return Ok("تم حذف الزبون");
+
+            return new BaseResponse<CustomerDto>("تم حذف العميل بنجاح");
+        }
+
+        [HttpGet("{customerId}")]
+        public async Task<BaseResponse<CustomerDto>> GetCustomerById(int customerId)
+        {
+            var customer = await _customerRepository.GetByIdAsync(customerId);
+
+            if (customer == null)
+                return new BaseResponse<CustomerDto>("العميل غير موجود", success: false, statusCode: 404);
+
+            var customerDto = _mapper.Map<CustomerDto>(customer);
+
+            return new BaseResponse<CustomerDto>("", success: true, statusCode: 200, data: customerDto);
+        }
+
+        [HttpGet]
+        public async Task<BaseResponse<IEnumerable<CustomerDto>>> GetAllCustomers([FromQuery] IndexQuery query)
+        {
+            var filterObject = new FilterObject { Filters = query.filters };
+
+            var customers = await _customerRepository.GetFilterThenPagedReponseAsync(filterObject, query.page, query.perPage);
+
+            int totalCount = _customerRepository.WhereThenFilter(_ => true, filterObject).Count();
+
+            if (totalCount == 0)
+                return new BaseResponse<IEnumerable<CustomerDto>>(
+                message: "لا توجد بيانات متاحة",
+                success: true,
+                statusCode: 204
+            );
+
+            var customerDtos = _mapper.Map<IEnumerable<CustomerDto>>(customers);
+
+            var pagination = new Pagination(query.page, query.perPage, totalCount);
+
+            return new BaseResponse<IEnumerable<CustomerDto>>(
+                message: "",
+                success: true,
+                statusCode: 200,
+                data: customerDtos,
+                pagination: pagination
+            );
         }
     }
 }

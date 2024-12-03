@@ -1,11 +1,9 @@
 ﻿using AutoMapper.Internal;
 using Microsoft.EntityFrameworkCore;
-using System;
 using System.Linq.Expressions;
 using System.Reflection;
 using System.Transactions;
 using WarehouseManagementSystem.DataBase;
-using WarehouseManagementSystem.Models;
 using WarehouseManagementSystem.Models.Common;
 
 namespace WarehouseManagementSystem.Contract.BaseRepository
@@ -333,6 +331,9 @@ namespace WarehouseManagementSystem.Contract.BaseRepository
             return PropertyNames;
         }
 
-      
+        public IQueryable<T> AsQueryable()
+        {
+            return _DbSet.AsNoTracking();
+        }
     }
 }

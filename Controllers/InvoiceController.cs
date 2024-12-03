@@ -334,7 +334,7 @@ namespace WarehouseManagementSystem.Controllers
         #endregion
 
         #region Create
-
+        [HttpPost("sales")]
         public async Task<BaseResponse<SalesInvoiceDto>> CreateSalesInvoice([FromForm] CreateSelesInvoiceDto input)
         {
             try
@@ -553,6 +553,7 @@ namespace WarehouseManagementSystem.Controllers
         #endregion
 
         #region Update
+        [HttpPost("sales/{id}")]
         public async Task<BaseResponse<SalesInvoiceDto>> UpdateSalesInvoice(int id, [FromForm] CreateSelesInvoiceDto input)
         {
             try

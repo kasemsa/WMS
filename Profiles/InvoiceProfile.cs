@@ -2,11 +2,11 @@
 using WarehouseManagementSystem.Models;
 using WarehouseManagementSystem.Models.Dtos.InvoiceDtos;
 
-namespace WarehouseManagementSystem
+namespace WarehouseManagementSystem.Profiles
 {
-    public class MappingProfile : Profile
+    public class InvoiceProfile : Profile
     {
-        public MappingProfile()
+        public InvoiceProfile()
         {
             CreateMap<InvoiceItemDto, InvoiceItem>();
 

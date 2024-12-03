@@ -6,6 +6,6 @@
         public string Name { get; set; } = string.Empty;
         public string City { get; set; } = string.Empty;
         public decimal Balance { get; set; }
-        public List<int>? SalesInvoiceIds { get; set; }
+        public List<SalesInvoice> SalesInvoices { get; set; } = null!;
     }
 }

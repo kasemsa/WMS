@@ -26,7 +26,8 @@ namespace WarehouseManagementSystem.Profiles
 
 
             // Mapping Commissary to CommissaryDto for read-only data retrieval
-            CreateMap<Commissary, CommissaryDto>();
+            CreateMap<Commissary, CommissaryDto>()
+            .ForMember(dest => dest.Email, opt => opt.MapFrom(src => src.User.Email));
         }
     }
 }

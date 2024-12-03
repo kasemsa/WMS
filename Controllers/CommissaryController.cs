@@ -1,6 +1,6 @@
 ﻿using AutoMapper;
-using Azure.Core;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 using WarehouseManagementSystem.Contract.BaseRepository;
 using WarehouseManagementSystem.Models;
 using WarehouseManagementSystem.Models.Common;
@@ -40,13 +40,16 @@ namespace WarehouseManagementSystem.Controllers
 
             Pagination pagination = new Pagination(query.page, query.perPage, Count);
 
-            return Ok(new BaseResponse<IEnumerable<CommissaryDto>>("",true,200,commissaryDtos,pagination));
+            return Ok(new BaseResponse<IEnumerable<CommissaryDto>>("", true, 200, commissaryDtos, pagination));
         }
 
         [HttpGet("{commissaryId}")]
         public async Task<IActionResult> GetCommissaryById(int commissaryId)
         {
-            var commissary = await _commissaryRepository.GetByIdAsync(commissaryId);
+            var commissary = await _commissaryRepository
+                .Where(c => c.Id == commissaryId)
+                .Include(c => c.User)
+                .FirstOrDefaultAsync();
             if (commissary == null)
                 return NotFound("المندوب غير موجود");
 

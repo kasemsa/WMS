@@ -1,14 +1,11 @@
 ﻿using AutoMapper;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using WarehouseManagementSystem.Contract.BaseRepository;
 using WarehouseManagementSystem.Contract.FileServices;
 using WarehouseManagementSystem.Models;
 using WarehouseManagementSystem.Models.Common;
 using WarehouseManagementSystem.Models.Constants;
-using WarehouseManagementSystem.Models.Dtos.CustomerDtos;
 using WarehouseManagementSystem.Models.Dtos.ProductDtos;
-using WarehouseManagementSystem.Models.Dtos.UserDtos;
 using WarehouseManagementSystem.Models.Responses;
 
 namespace WarehouseManagementSystem.Controllers
@@ -33,7 +30,7 @@ namespace WarehouseManagementSystem.Controllers
         {
             var ProductToAdd = _mapper.Map<Product>(product);
 
-            ProductToAdd.Image = product.ProductImage == null 
+            ProductToAdd.Image = product.ProductImage == null
                 ? string.Empty
                 : await _FileService.SaveFileAsync(product.ProductImage);
 

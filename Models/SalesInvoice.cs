@@ -4,7 +4,7 @@ using WarehouseManagementSystem.Models.Constants;
 
 namespace WarehouseManagementSystem.Models
 {
-    public class SalesInvoice : AuditableEntity
+    public class SalesInvoice : AuditableEntity, IInvoice
     {
         public int Id { get; set; }
         public decimal TotalProductsPrice;

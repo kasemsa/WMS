@@ -3,7 +3,7 @@ using WarehouseManagementSystem.Models.Common;
 
 namespace WarehouseManagementSystem.Models
 {
-    public class PurchaseInvoice : AuditableEntity
+    public class PurchaseInvoice : AuditableEntity, IInvoice
     {
         public int Id { get; set; }
         public Customer Commissary { get; set; } = null!;

@@ -13,7 +13,6 @@ namespace WarehouseManagementSystem.Contract
             // Default Database..
             services.AddDbContext<WarehouseDbContext>(options =>
                 options.UseSqlServer(connectionString: configuration.GetConnectionString("DefaultConnection")));
-
             services.AddScoped(typeof(IAsyncRepository<>), typeof(BaseRepository<>));
             services.AddScoped<IFileService, FileService>();
             services.AddAutoMapper(Assembly.GetExecutingAssembly());

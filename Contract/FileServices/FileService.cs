@@ -1,7 +1,4 @@
-﻿
-using Microsoft.VisualBasic.FileIO;
-
-namespace WarehouseManagementSystem.Contract.FileServices
+﻿namespace WarehouseManagementSystem.Contract.FileServices
 {
     public class FileService : IFileService
     {

@@ -1,5 +1,4 @@
 using System.Linq.Expressions;
-using WarehouseManagementSystem.Models;
 using WarehouseManagementSystem.Models.Common;
 
 namespace WarehouseManagementSystem.Contract.BaseRepository
@@ -34,5 +33,8 @@ namespace WarehouseManagementSystem.Contract.BaseRepository
         // Additional Utilities
         Task<List<string>> GetPropertyNames();
         Task<T> FindAsync(Expression<Func<T, bool>> criteria); // Ensure this is included
+
+        // Add AsQueryable
+        IQueryable<T> AsQueryable();
     }
 }

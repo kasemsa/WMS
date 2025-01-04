@@ -14,7 +14,6 @@ namespace WarehouseManagementSystem.Models.Dtos.CommissaryDtos
         public string ConfirmPassword { get; set; } = string.Empty;
 
         public string PhoneNumber { get; set; } = string.Empty;
-        public decimal Balance { get; set; } = 0;
         public string Email { get; set; } = string.Empty;
         public List<int>? RoleIds { get; set; }
     }

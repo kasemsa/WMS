@@ -31,7 +31,7 @@ namespace WarehouseManagementSystem.Controllers
         {
             if(user.Password != user.ConfirmPassword)
             {
-                return BadRequest("كلمة السر غير متطابقة");
+                return BadRequest(new BaseResponse<object>("كلمة السر غير متطابقة", false, 400));
             }
 
             var UserToAdd = _mapper.Map<User>(user);
@@ -47,7 +47,7 @@ namespace WarehouseManagementSystem.Controllers
 
             await _UserRepository.AddAsync(UserToAdd);
 
-            return Ok("تم إنشاء المستخدم بنجاح");
+            return Ok(new BaseResponse<object>("تم إنشاء المستخدم بنجاح", true, 200));
         }
 
         [HttpPut]
@@ -57,13 +57,13 @@ namespace WarehouseManagementSystem.Controllers
             
             if(UserToUpdate == null)
             {
-                return NotFound("المستخدم غير موجود");
+                return NotFound(new BaseResponse<object>("المستخدم غير موجود", false, 404));
             }
             _mapper.Map(user, UserToUpdate, typeof(UpdateUserDto), typeof(User));
 
             await _UserRepository.UpdateAsync(UserToUpdate);
 
-            return Ok("تم إنشاء المستخدم بنجاح");
+            return Ok(new BaseResponse<object>("تم تعديل المستخدم بنجاح", true, 200));
         }
 
         [HttpDelete("{UserId}")]
@@ -73,12 +73,12 @@ namespace WarehouseManagementSystem.Controllers
 
             if (UserToDelete == null)
             {
-                return NotFound("المستخدم غير موجود");
+                return NotFound(new BaseResponse<object>("المستخدم غير موجود", false, 404));
             }
 
             await _UserRepository.DeleteAsync(UserToDelete);
 
-            return Ok("تم حذف المستخدم");
+            return Ok(new BaseResponse<object>("تم حذف المستخدم", true, 200));
         }
 
         [HttpGet("{UserId}")]
@@ -87,14 +87,14 @@ namespace WarehouseManagementSystem.Controllers
             var User = await _UserRepository.GetByIdAsync(UserId);
             if (User == null)
             {
-                return NotFound("المستخدم غير موجود");
+                return NotFound(new BaseResponse<object>("المستخدم غير موجود", false, 404));
             }
             var UserDto = _mapper.Map<UserDto>(User);
-            return Ok(UserDto);
+            return Ok(new BaseResponse<UserDto>("", true, 200, UserDto));
         }
 
         [HttpGet("GetAllUsers")]
-        public async Task<IActionResult> GetAllUsers([FromQuery] IndexQuery query)
+        public async Task<BaseResponse<IEnumerable<UserDto>>> GetAllUsers([FromQuery] IndexQuery query)
         {
             FilterObject filterObject = new FilterObject() { Filters = query.filters };
 
@@ -106,7 +106,7 @@ namespace WarehouseManagementSystem.Controllers
 
             Pagination pagination = new Pagination(query.page, query.perPage, Count);
 
-            return Ok(new BaseResponse<IEnumerable<UserDto>>("", true, 200, UsersDtos, pagination));
+            return new BaseResponse<IEnumerable<UserDto>>("", true, 200, UsersDtos, pagination);
         }
     }
 }

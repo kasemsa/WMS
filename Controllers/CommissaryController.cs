@@ -54,18 +54,19 @@ namespace WarehouseManagementSystem.Controllers
                 return NotFound("المندوب غير موجود");
 
             var commissaryDto = _mapper.Map<CommissaryDto>(commissary);
-            return Ok(commissaryDto);
+            return Ok(new BaseResponse<CommissaryDto>("", true, 200, commissaryDto));
         }
 
         [HttpPost]
         public async Task<IActionResult> CreateCommissary([FromForm] CreateCommissaryDto commissaryDto)
         {
-            if (!ModelState.IsValid)
-            {
-                return BadRequest(ModelState);
-            }
+            //if (!ModelState.IsValid)
+            //{
+            //    return BadRequest(ModelState);
+            //}
+
             if (commissaryDto.Password != commissaryDto.ConfirmPassword)
-                return BadRequest("كلمة السر غير متطابقة");
+                return BadRequest(new BaseResponse<object>("كلمة السر غير متطابقة", false, 400));
 
             var user = await _userRepository.AddAsync(_mapper.Map<User>(commissaryDto));
             var commissary = _mapper.Map<Commissary>(commissaryDto);
@@ -73,7 +74,7 @@ namespace WarehouseManagementSystem.Controllers
 
             await _commissaryRepository.AddAsync(commissary);
 
-            return Ok("تم إضافة المندوب بنجاح");
+            return Ok(new BaseResponse<object>("تم إضافة المندوب بنجاح", true, 200));
         }
 
         [HttpPut("{commissaryId}")]
@@ -81,12 +82,12 @@ namespace WarehouseManagementSystem.Controllers
         {
             var commissary = await _commissaryRepository.GetByIdAsync(commissaryId);
             if (commissary == null)
-                return NotFound("المندوب غير موجود");
+                return NotFound(new BaseResponse<object>("المندوب غير موجود", false, 404));
 
             _mapper.Map(commissaryDto, commissary);
             await _commissaryRepository.UpdateAsync(commissary);
 
-            return Ok("تم تعديل المندوب بنجاح");
+            return Ok(new BaseResponse<object>("تم تعديل المندوب بنجاح", true, 200));
         }
 
         [HttpDelete("{commissaryId}")]
@@ -94,11 +95,11 @@ namespace WarehouseManagementSystem.Controllers
         {
             var commissary = await _commissaryRepository.GetByIdAsync(commissaryId);
             if (commissary == null)
-                return NotFound("المندوب غير موجود");
+                return NotFound(new BaseResponse<object>("المندوب غير موجود", false, 404));
 
             await _commissaryRepository.DeleteAsync(commissary);
 
-            return Ok("تم حذف المندوب بنجاح");
+            return Ok(new BaseResponse<object>("تم حذف المندوب بنجاح", true, 200));
         }
     }
 }

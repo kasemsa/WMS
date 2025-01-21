@@ -36,7 +36,7 @@ namespace WarehouseManagementSystem.Controllers
 
             await _ProductRepository.AddAsync(ProductToAdd);
 
-            return Ok("تم إضافة المنتج بنجاح");
+            return Ok(new BaseResponse<object>("تم إضافة المنتج بنجاح", true, 200));
         }
 
         [HttpPut]
@@ -46,7 +46,7 @@ namespace WarehouseManagementSystem.Controllers
 
             if (ProductToUpdate == null)
             {
-                return NotFound("المنتج غير موجود");
+                return NotFound(new BaseResponse<object>("المنتج غير موجود", true, 404));
             }
 
             var Image = ProductToUpdate.Image;
@@ -59,7 +59,7 @@ namespace WarehouseManagementSystem.Controllers
 
             await _ProductRepository.UpdateAsync(ProductToUpdate);
 
-            return Ok("تم تعديل المنتج بنجاح");
+            return Ok(new BaseResponse<object>("تم تعديل المنتج بنجاح", true, 200));
         }
 
         [HttpDelete("{UserId}")]
@@ -69,24 +69,27 @@ namespace WarehouseManagementSystem.Controllers
 
             if (ProductToDelete == null)
             {
-                return NotFound("المنتج غير موجود");
+                return NotFound(new BaseResponse<object>("المنتج غير موجود", true, 404));
             }
 
             await _ProductRepository.DeleteAsync(ProductToDelete);
 
-            return Ok("تم حذف المنتج");
+            return Ok(new BaseResponse<object>("تم حذف المنتج", true, 200));
         }
 
         [HttpGet("{ProductId}")]
         public async Task<IActionResult> GetProductById(int ProductId)
         {
             var Product = await _ProductRepository.GetByIdAsync(ProductId);
+
             if (Product == null)
             {
-                return NotFound("المنتج غير موجود");
+                return NotFound(new BaseResponse<object>("المنتج غير موجود", true, 404));
             }
+
             var ProductDto = _mapper.Map<ProductDto>(Product);
-            return Ok(ProductDto);
+
+            return Ok(new BaseResponse<ProductDto>("", true, 200, ProductDto));
         }
         [HttpGet("GetAllProducts")]
         public async Task<IActionResult> GetAllProducts([FromQuery] IndexQuery query)

@@ -176,6 +176,22 @@ namespace WarehouseManagementSystem.DataBase.Seeders
                 {
                     //Id = 31,
                     PermissionName = "PrintPurchaseInvoiceById"
+                },
+                // ------Role--------
+                new Permission()
+                {
+                    //Id = 30,
+                    PermissionName = "CreateRole"
+                },
+                new Permission()
+                {
+                    //Id = 31,
+                    PermissionName = "DeleteRole"
+                },
+                new Permission()
+                {
+                    //Id = 31,
+                    PermissionName = "AddPermissionToRole"
                 });
 
                 await _context.SaveChangesAsync();

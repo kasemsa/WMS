@@ -1,7 +1,9 @@
 ﻿using AutoMapper;
 using Microsoft.AspNetCore.Cryptography.KeyDerivation;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 using WarehouseManagementSystem.Contract.BaseRepository;
+using WarehouseManagementSystem.Contract.SeedServices;
 using WarehouseManagementSystem.Infrastructure.JwtService;
 using WarehouseManagementSystem.Models;
 using WarehouseManagementSystem.Models.Dtos;
@@ -15,25 +17,33 @@ namespace WarehouseManagementSystem.Controllers
     {
         private readonly IAsyncRepository<User> _userRepository;
         private readonly IAsyncRepository<UserToken> _userTokenRepository;
+        private readonly IAsyncRepository<UserRole> _roleRepository;
+        private readonly IAsyncRepository<RolePermission> _rolePermissionRepository;
         private readonly IMapper _mapper;
         private readonly IJwtProvider _jwtProvider;
+        private readonly IServiceProvider _serviceProvider;
+        private readonly ISeedService _seedServices;
 
-        public AuthenticationController(IAsyncRepository<User> userRepository, IAsyncRepository<UserToken> userTokenRepository, IMapper mapper, IJwtProvider jwtProvider)
+        public AuthenticationController(ISeedService seedServices, IServiceProvider serviceProvider, IAsyncRepository<RolePermission> rolePermissionRepository, IAsyncRepository<UserRole> roleRepository, IAsyncRepository<User> userRepository, IAsyncRepository<UserToken> userTokenRepository, IMapper mapper, IJwtProvider jwtProvider)
         {
             _userRepository = userRepository;
             _userTokenRepository = userTokenRepository;
             _mapper = mapper;
             _jwtProvider = jwtProvider;
+            _roleRepository = roleRepository;
+            _rolePermissionRepository = rolePermissionRepository;
+            _seedServices = seedServices;
+            _serviceProvider = serviceProvider;
         }
 
         [HttpPost]
-        public async Task<BaseResponse<UserToken>> LogIn(UserloginDto user)
+        public async Task<BaseResponse<AuthenticationResponse>> LogIn(UserloginDto user)
         {
             var UserToLogin = _userRepository.Where(u=>u.UserName == user.UserName).FirstOrDefault();
            
             if(UserToLogin == null)
             {
-                return new BaseResponse<UserToken>("عذرا لا يمكن تسجيل الدخول", false, 401);
+                return new BaseResponse<AuthenticationResponse>("عذرا لا يمكن تسجيل الدخول", false, 401);
             }
 
             byte[] salt = new byte[16] { 41, 214, 78, 222, 28, 87, 170, 211, 217, 125, 200, 214, 185, 144, 44, 34 };
@@ -47,10 +57,19 @@ namespace WarehouseManagementSystem.Controllers
 
             if(passwprd != UserToLogin.Password)
             {
-                return new BaseResponse<UserToken>("عذرا لا يمكن تسجيل الدخول", false, 401);
+                return new BaseResponse<AuthenticationResponse>("عذرا لا يمكن تسجيل الدخول", false, 401);
             }
+            var UserRoles = _roleRepository.Where(r => r.UserId == UserToLogin.Id).Include(r=>r.Role).Select(r => r.Role).ToList();
 
-            var token = _userTokenRepository.Where(u => u.UserId == UserToLogin.Id).FirstOrDefault();
+            var Permissions = _rolePermissionRepository.Where(p => UserRoles.Contains(p.Role)).Include(p => p.Permission).Select(p => p.Permission).ToList();
+            
+            var token = _userTokenRepository.Where(u => u.UserId == UserToLogin.Id).Select(u=>u.Token).FirstOrDefault();
+            
+            var Response = _mapper.Map<AuthenticationResponse>(UserToLogin);
+            
+            Response.Roles = UserRoles;
+            Response.Permissions = Permissions;
+            Response.Token = token;
 
             if (token == null)
             {
@@ -63,10 +82,20 @@ namespace WarehouseManagementSystem.Controllers
 
                 await _userTokenRepository.AddAsync(UserToken);
 
-                return new BaseResponse<UserToken>(UserToken,"تم تسجيل الدخول بنجاح", true,200);
-            }
-            else return new BaseResponse<UserToken>(token, "تم تسجيل الدخول بنجاح", true, 200);
+                Response.Token = Token;
 
+                return new BaseResponse<AuthenticationResponse>(Response, "تم تسجيل الدخول بنجاح", true,200);
+            }
+            else return new BaseResponse<AuthenticationResponse>(Response, "لقد فمت بتسجيل الدخول", true, 200);
+
+        }
+
+        [HttpGet("ApplySeeder", Name = "ApplySeeder")]
+        public async Task<IActionResult> ApplySeeder()
+        {
+            await _seedServices.Initialize(_serviceProvider);
+
+            return Ok(new BaseResponse<object>("تمت العملية بنجاح", true, 200));
         }
     }
 }

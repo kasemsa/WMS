@@ -28,7 +28,7 @@ namespace WarehouseManagementSystem.Controllers
             // Check if the customer name already exists
             bool nameExists = _customerRepository.Where(c => c.Name == customerDto.Name).Any();
             if (nameExists)
-                return BadRequest(new BaseResponse<CustomerDto>("اسم العميل موجود بالفعل", success: false, statusCode: 400));
+                return Ok(new BaseResponse<CustomerDto>("اسم العميل موجود بالفعل", success: false, statusCode: 400));
 
             var customer = _mapper.Map<Customer>(customerDto);
 
@@ -43,12 +43,12 @@ namespace WarehouseManagementSystem.Controllers
             var customer = await _customerRepository.GetByIdAsync(customerId);
 
             if (customer == null)
-                return BadRequest(new BaseResponse<CustomerDto>("العميل غير موجود", success: false, statusCode: 404));
+                return Ok(new BaseResponse<CustomerDto>("العميل غير موجود", success: false, statusCode: 404));
 
             // Check if the customer name already exists
             bool nameExists = _customerRepository.Where(c => c.Name == customerDto.Name).Any();
             if (nameExists)
-                return BadRequest(new BaseResponse<CustomerDto>("اسم العميل موجود بالفعل", success: false, statusCode: 400));
+                return Ok(new BaseResponse<CustomerDto>("اسم العميل موجود بالفعل", success: false, statusCode: 400));
 
             _mapper.Map(customerDto, customer);
 
@@ -63,7 +63,7 @@ namespace WarehouseManagementSystem.Controllers
             var customer = await _customerRepository.GetByIdAsync(customerId);
 
             if (customer == null)
-                return NotFound(new BaseResponse<CustomerDto>("العميل غير موجود", success: false, statusCode: 404));
+                return Ok(new BaseResponse<CustomerDto>("العميل غير موجود", success: false, statusCode: 404));
 
             await _customerRepository.DeleteAsync(customer);
 
@@ -76,7 +76,7 @@ namespace WarehouseManagementSystem.Controllers
             var customer = await _customerRepository.GetByIdAsync(customerId);
 
             if (customer == null)
-                return NotFound(new BaseResponse<CustomerDto>("العميل غير موجود", success: false, statusCode: 404));
+                return Ok(new BaseResponse<CustomerDto>("العميل غير موجود", success: false, statusCode: 404));
 
             var customerDto = _mapper.Map<CustomerDto>(customer);
 

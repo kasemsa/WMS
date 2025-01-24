@@ -42,7 +42,7 @@ namespace WarehouseManagementSystem.Controllers
 
             return Ok(new BaseResponse<IEnumerable<CommissaryDto>>("", true, 200, commissaryDtos, pagination));
         }
-
+        
         [HttpGet("{commissaryId}")]
         public async Task<IActionResult> GetCommissaryById(int commissaryId)
         {
@@ -51,7 +51,7 @@ namespace WarehouseManagementSystem.Controllers
                 .Include(c => c.User)
                 .FirstOrDefaultAsync();
             if (commissary == null)
-                return NotFound("المندوب غير موجود");
+                return Ok(new BaseResponse<object>("المندوب غير موجود", false, 404));
 
             var commissaryDto = _mapper.Map<CommissaryDto>(commissary);
             return Ok(new BaseResponse<CommissaryDto>("", true, 200, commissaryDto));
@@ -66,7 +66,7 @@ namespace WarehouseManagementSystem.Controllers
             //}
 
             if (commissaryDto.Password != commissaryDto.ConfirmPassword)
-                return BadRequest(new BaseResponse<object>("كلمة السر غير متطابقة", false, 400));
+                return Ok(new BaseResponse<object>("كلمة السر غير متطابقة", false, 400));
 
             var user = await _userRepository.AddAsync(_mapper.Map<User>(commissaryDto));
             var commissary = _mapper.Map<Commissary>(commissaryDto);
@@ -82,7 +82,7 @@ namespace WarehouseManagementSystem.Controllers
         {
             var commissary = await _commissaryRepository.GetByIdAsync(commissaryId);
             if (commissary == null)
-                return NotFound(new BaseResponse<object>("المندوب غير موجود", false, 404));
+                return Ok(new BaseResponse<object>("المندوب غير موجود", false, 404));
 
             _mapper.Map(commissaryDto, commissary);
             await _commissaryRepository.UpdateAsync(commissary);
@@ -95,7 +95,7 @@ namespace WarehouseManagementSystem.Controllers
         {
             var commissary = await _commissaryRepository.GetByIdAsync(commissaryId);
             if (commissary == null)
-                return NotFound(new BaseResponse<object>("المندوب غير موجود", false, 404));
+                return Ok(new BaseResponse<object>("المندوب غير موجود", false, 404));
 
             await _commissaryRepository.DeleteAsync(commissary);
 

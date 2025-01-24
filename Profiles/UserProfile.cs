@@ -1,6 +1,7 @@
 ﻿using AutoMapper;
 using WarehouseManagementSystem.Models;
 using WarehouseManagementSystem.Models.Dtos.UserDtos;
+using WarehouseManagementSystem.Models.Responses;
 
 namespace WarehouseManagementSystem.Profiles
 {
@@ -11,6 +12,7 @@ namespace WarehouseManagementSystem.Profiles
             CreateMap<User, UserDto>().ReverseMap();
             CreateMap<User, CreateUserDto>().ReverseMap();
             CreateMap<User, UpdateUserDto>().ReverseMap();
+            CreateMap<User, AuthenticationResponse>().ReverseMap();
         }
     }
 }

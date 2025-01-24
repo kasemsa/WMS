@@ -31,7 +31,7 @@ namespace WarehouseManagementSystem.Controllers
             // Check if the sales invoice exists
             if (salesInvoice == null)
             {
-                return NotFound(new BaseResponse<SalesInvoiceDto>(
+                return Ok(new BaseResponse<SalesInvoiceDto>(
                     message: $"Sales invoice with ID {id} not found.",
                     success: false,
                     statusCode: 404
@@ -56,7 +56,7 @@ namespace WarehouseManagementSystem.Controllers
             if (purchaseInvoice == null)
             {
                 // Return a 404 response with the BaseResponse object
-                return NotFound(new BaseResponse<PurchaseInvoiceDto>(
+                return Ok(new BaseResponse<PurchaseInvoiceDto>(
                     message: $"Purchase invoice with ID {id} not found.",
                     success: false,
                     statusCode: 404

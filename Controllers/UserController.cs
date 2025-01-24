@@ -31,7 +31,7 @@ namespace WarehouseManagementSystem.Controllers
         {
             if(user.Password != user.ConfirmPassword)
             {
-                return BadRequest(new BaseResponse<object>("كلمة السر غير متطابقة", false, 400));
+                return Ok(new BaseResponse<object>("كلمة السر غير متطابقة", false, 400));
             }
 
             var UserToAdd = _mapper.Map<User>(user);
@@ -57,7 +57,7 @@ namespace WarehouseManagementSystem.Controllers
             
             if(UserToUpdate == null)
             {
-                return NotFound(new BaseResponse<object>("المستخدم غير موجود", false, 404));
+                return Ok(new BaseResponse<object>("المستخدم غير موجود", false, 404));
             }
             _mapper.Map(user, UserToUpdate, typeof(UpdateUserDto), typeof(User));
 
@@ -73,7 +73,7 @@ namespace WarehouseManagementSystem.Controllers
 
             if (UserToDelete == null)
             {
-                return NotFound(new BaseResponse<object>("المستخدم غير موجود", false, 404));
+                return Ok(new BaseResponse<object>("المستخدم غير موجود", false, 404));
             }
 
             await _UserRepository.DeleteAsync(UserToDelete);
@@ -87,7 +87,7 @@ namespace WarehouseManagementSystem.Controllers
             var User = await _UserRepository.GetByIdAsync(UserId);
             if (User == null)
             {
-                return NotFound(new BaseResponse<object>("المستخدم غير موجود", false, 404));
+                return Ok(new BaseResponse<object>("المستخدم غير موجود", false, 404));
             }
             var UserDto = _mapper.Map<UserDto>(User);
             return Ok(new BaseResponse<UserDto>("", true, 200, UserDto));

@@ -40,13 +40,13 @@ namespace WarehouseManagementSystem.Controllers
         }
 
         [HttpPut]
-        public async Task<IActionResult> UpdateUser([FromForm] UpdateProductDto product, int ProductId)
+        public async Task<IActionResult> UpdateProduct([FromForm] UpdateProductDto product, int ProductId)
         {
             var ProductToUpdate = await _ProductRepository.GetByIdAsync(ProductId);
 
             if (ProductToUpdate == null)
             {
-                return NotFound(new BaseResponse<object>("المنتج غير موجود", true, 404));
+                return Ok(new BaseResponse<object>("المنتج غير موجود", true, 404));
             }
 
             var Image = ProductToUpdate.Image;
@@ -63,13 +63,13 @@ namespace WarehouseManagementSystem.Controllers
         }
 
         [HttpDelete("{UserId}")]
-        public async Task<IActionResult> DeleteUser(int UserId)
+        public async Task<IActionResult> DeleteProduct(int UserId)
         {
             var ProductToDelete = await _ProductRepository.GetByIdAsync(UserId);
 
             if (ProductToDelete == null)
             {
-                return NotFound(new BaseResponse<object>("المنتج غير موجود", true, 404));
+                return Ok(new BaseResponse<object>("المنتج غير موجود", true, 404));
             }
 
             await _ProductRepository.DeleteAsync(ProductToDelete);
@@ -84,7 +84,7 @@ namespace WarehouseManagementSystem.Controllers
 
             if (Product == null)
             {
-                return NotFound(new BaseResponse<object>("المنتج غير موجود", true, 404));
+                return Ok(new BaseResponse<object>("المنتج غير موجود", true, 404));
             }
 
             var ProductDto = _mapper.Map<ProductDto>(Product);

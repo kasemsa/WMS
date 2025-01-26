@@ -12,8 +12,8 @@ using WarehouseManagementSystem.DataBase;
 namespace WarehouseManagementSystem.Migrations
 {
     [DbContext(typeof(WarehouseDbContext))]
-    [Migration("20241203174019_SeedRoles")]
-    partial class SeedRoles
+    [Migration("20250126153716_InitialDataBase")]
+    partial class InitialDataBase
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -319,24 +319,6 @@ namespace WarehouseManagementSystem.Migrations
                     b.HasKey("Id");
 
                     b.ToTable("Roles");
-
-                    b.HasData(
-                        new
-                        {
-                            Id = 1,
-                            CreatedAt = new DateTime(2024, 12, 3, 17, 40, 18, 703, DateTimeKind.Utc).AddTicks(154),
-                            CreatedBy = "System",
-                            IsDeleted = false,
-                            RoleName = "Admin"
-                        },
-                        new
-                        {
-                            Id = 2,
-                            CreatedAt = new DateTime(2024, 12, 3, 17, 40, 18, 703, DateTimeKind.Utc).AddTicks(160),
-                            CreatedBy = "System",
-                            IsDeleted = false,
-                            RoleName = "Commissary"
-                        });
                 });
 
             modelBuilder.Entity("WarehouseManagementSystem.Models.RolePermission", b =>

@@ -29,6 +29,7 @@ namespace WarehouseManagementSystem.Contract.BaseRepository
         Task<T> AddAsync(T entity, string token);
         Task UpdateAsync(T entity);
         Task DeleteAsync(T entity);
+        Task DeleteRange(Expression<Func<T, bool>>? predicate);
 
         // Additional Utilities
         Task<List<string>> GetPropertyNames();

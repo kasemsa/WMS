@@ -27,6 +27,9 @@ namespace WarehouseManagementSystem.Contract.SeedServices
                 
                 var RolePermissionSeeder = new RolePermissionSeeder(context);
                 await RolePermissionSeeder.Seed();
+
+                var UserSeeder = new UserSeeder(context); 
+                await UserSeeder.Seed();
             }
         }
     }

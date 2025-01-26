@@ -70,6 +70,11 @@ namespace WarehouseManagementSystem.Contract.BaseRepository
             await _dbContext.SaveChangesAsync();
         }
 
+        public async Task DeleteRange(Expression<Func<T, bool>>? predicate)
+        {
+            _DbSet.RemoveRange(_DbSet.Where(predicate!));
+        }
+
         public async Task DeleteAsync(T entity)
         {
             TransactionOptions TransactionOptions = new TransactionOptions
@@ -335,5 +340,7 @@ namespace WarehouseManagementSystem.Contract.BaseRepository
         {
             return _DbSet.AsNoTracking();
         }
+
+
     }
 }

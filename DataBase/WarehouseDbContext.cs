@@ -31,24 +31,7 @@ namespace WarehouseManagementSystem.DataBase
             modelBuilder.Entity<Permission>().HasQueryFilter(p => !p.IsDeleted);
             modelBuilder.Entity<Product>().HasQueryFilter(p => !p.IsDeleted);
             modelBuilder.Entity<PurchaseInvoice>().HasQueryFilter(p => !p.IsDeleted);
-            modelBuilder.Entity<Role>().HasQueryFilter(p => !p.IsDeleted).HasData(
-                new Role
-                {
-                    Id = 1,
-                    RoleName = "Admin",
-                    CreatedAt = DateTime.UtcNow,
-                    CreatedBy = "System",
-                    IsDeleted = false
-                },
-                new Role
-                {
-                    Id = 2,
-                    RoleName = "Commissary",
-                    CreatedAt = DateTime.UtcNow,
-                    CreatedBy = "System",
-                    IsDeleted = false
-                }
-            );
+            modelBuilder.Entity<Role>().HasQueryFilter(p => !p.IsDeleted);
             modelBuilder.Entity<RolePermission>().HasQueryFilter(p => !p.IsDeleted);
             modelBuilder.Entity<SalesInvoice>().HasQueryFilter(p => !p.IsDeleted);
             modelBuilder.Entity<User>().HasQueryFilter(p => !p.IsDeleted);

@@ -1,12 +1,14 @@
-﻿using Microsoft.EntityFrameworkCore.Migrations;
+﻿using System;
+using Microsoft.EntityFrameworkCore.Migrations;
 
 #nullable disable
 
 namespace WarehouseManagementSystem.Migrations
 {
-    public partial class Create_DataBase : Migration
+    /// <inheritdoc />
+    public partial class InitialDataBase : Migration
     {
-
+        /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
         {
             migrationBuilder.CreateTable(
@@ -119,7 +121,6 @@ namespace WarehouseManagementSystem.Migrations
                 {
                     Id = table.Column<int>(type: "int", nullable: false)
                         .Annotation("SqlServer:Identity", "1, 1"),
-                    InvoiceTotal = table.Column<decimal>(type: "decimal(18,2)", nullable: false),
                     CommissaryId = table.Column<int>(type: "int", nullable: false),
                     CreatedBy = table.Column<string>(type: "nvarchar(max)", nullable: true),
                     CreatedAt = table.Column<DateTime>(type: "datetime2", nullable: false),
@@ -179,7 +180,6 @@ namespace WarehouseManagementSystem.Migrations
                         .Annotation("SqlServer:Identity", "1, 1"),
                     Name = table.Column<string>(type: "nvarchar(max)", nullable: false),
                     PhoneNumber = table.Column<string>(type: "nvarchar(max)", nullable: false),
-                    Balance = table.Column<decimal>(type: "decimal(18,2)", nullable: false),
                     UserId = table.Column<int>(type: "int", nullable: false),
                     CreatedBy = table.Column<string>(type: "nvarchar(max)", nullable: true),
                     CreatedAt = table.Column<DateTime>(type: "datetime2", nullable: false),
@@ -296,12 +296,12 @@ namespace WarehouseManagementSystem.Migrations
                     Id = table.Column<int>(type: "int", nullable: false)
                         .Annotation("SqlServer:Identity", "1, 1"),
                     PreviousBalance = table.Column<decimal>(type: "decimal(18,2)", nullable: false),
+                    CurrentBalance = table.Column<decimal>(type: "decimal(18,2)", nullable: false),
+                    Payment = table.Column<decimal>(type: "decimal(18,2)", nullable: false),
                     InvoiceTotal = table.Column<decimal>(type: "decimal(18,2)", nullable: false),
                     DiscountValue = table.Column<decimal>(type: "decimal(18,2)", nullable: false),
                     DiscountType = table.Column<int>(type: "int", nullable: true),
-                    Payment = table.Column<decimal>(type: "decimal(18,2)", nullable: false),
-                    CurrentBalance = table.Column<decimal>(type: "decimal(18,2)", nullable: false),
-                    QRCodeContent = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    Refunded = table.Column<bool>(type: "bit", nullable: false),
                     CustomerId = table.Column<int>(type: "int", nullable: false),
                     CommissaryId = table.Column<int>(type: "int", nullable: false),
                     CreatedBy = table.Column<string>(type: "nvarchar(max)", nullable: true),
@@ -340,6 +340,7 @@ namespace WarehouseManagementSystem.Migrations
                     ProductId = table.Column<int>(type: "int", nullable: false),
                     SalesInvoiceId = table.Column<int>(type: "int", nullable: true),
                     PurchaseInvoiceId = table.Column<int>(type: "int", nullable: true),
+                    CommissaryId = table.Column<int>(type: "int", nullable: true),
                     CreatedBy = table.Column<string>(type: "nvarchar(max)", nullable: true),
                     CreatedAt = table.Column<DateTime>(type: "datetime2", nullable: false),
                     LastModifiedBy = table.Column<string>(type: "nvarchar(max)", nullable: true),
@@ -350,6 +351,11 @@ namespace WarehouseManagementSystem.Migrations
                 constraints: table =>
                 {
                     table.PrimaryKey("PK_InvoiceItems", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_InvoiceItems_Commissaries_CommissaryId",
+                        column: x => x.CommissaryId,
+                        principalTable: "Commissaries",
+                        principalColumn: "Id");
                     table.ForeignKey(
                         name: "FK_InvoiceItems_Products_ProductId",
                         column: x => x.ProductId,
@@ -372,6 +378,11 @@ namespace WarehouseManagementSystem.Migrations
                 name: "IX_Commissaries_UserId",
                 table: "Commissaries",
                 column: "UserId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_InvoiceItems_CommissaryId",
+                table: "InvoiceItems",
+                column: "CommissaryId");
 
             migrationBuilder.CreateIndex(
                 name: "IX_InvoiceItems_ProductId",

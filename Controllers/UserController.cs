@@ -18,15 +18,23 @@ namespace WarehouseManagementSystem.Controllers
     public class UserController : ControllerBase
     {
         private readonly IAsyncRepository<User> _UserRepository;
+        private readonly IAsyncRepository<UserRole> _userRoleRepository;
+        private readonly IAsyncRepository<UserPermission> _userPermissionRepository;
+        private readonly IAsyncRepository<RolePermission> _rolePermissionRepository;
+        private readonly IAsyncRepository<UserToken> _userTokenRepository;
         private readonly IMapper _mapper;
 
-        public UserController(IMapper mapper, IAsyncRepository<User> UserRepository)
+        public UserController(IAsyncRepository<UserToken> userTokenRepository, IAsyncRepository<RolePermission> rolePermissionRepository, IAsyncRepository<UserPermission> userPermissionRepository, IAsyncRepository<UserRole> userRoleRepository, IMapper mapper, IAsyncRepository<User> UserRepository)
         {
             _mapper = mapper;
             _UserRepository = UserRepository;
+            _rolePermissionRepository = rolePermissionRepository;
+            _userPermissionRepository = userPermissionRepository;
+            _userRoleRepository = userRoleRepository;
+            _userTokenRepository = userTokenRepository;
         }
         
-        [HttpPost]
+        [HttpPost("CreateUser")]
         public async Task<IActionResult> CreateUser([FromBody] CreateUserDto user)
         {
             if(user.Password != user.ConfirmPassword)
@@ -45,12 +53,23 @@ namespace WarehouseManagementSystem.Controllers
                 iterationCount: 100000,
                 numBytesRequested: 256 / 8));
 
-            await _UserRepository.AddAsync(UserToAdd);
+            var User = await _UserRepository.AddAsync(UserToAdd);
 
+            if (user.RoleIds != null)
+            {
+                foreach (var role in user.RoleIds)
+                {
+                    await _userRoleRepository.AddAsync(new UserRole()
+                    {
+                        UserId = User.Id,
+                        RoleId = role
+                    });
+                }
+            }
             return Ok(new BaseResponse<object>("تم إنشاء المستخدم بنجاح", true, 200));
         }
 
-        [HttpPut]
+        [HttpPut("UpdateUser")]
         public async Task<IActionResult> UpdateUser([FromBody] UpdateUserDto user, int UserId)
         {
             var UserToUpdate = await _UserRepository.GetByIdAsync(UserId);
@@ -63,10 +82,29 @@ namespace WarehouseManagementSystem.Controllers
 
             await _UserRepository.UpdateAsync(UserToUpdate);
 
+            await _userRoleRepository.DeleteRange(r => r.UserId == UserId);
+
+            if(user.RoleIds != null)
+            {
+                foreach(var role in user.RoleIds)
+                {
+                    var UserRole = new UserRole()
+                    {
+                        RoleId = role,
+                        UserId = UserId
+                    };
+                    await _userRoleRepository.AddAsync(UserRole);
+                }
+            }
+
+            var UserToken = _userTokenRepository.Where(u => u.UserId == UserId).First();
+
+            await _userTokenRepository.DeleteAsync(UserToken);
+
             return Ok(new BaseResponse<object>("تم تعديل المستخدم بنجاح", true, 200));
         }
 
-        [HttpDelete("{UserId}")]
+        [HttpDelete("DeleteUser/{UserId}")]
         public async Task<IActionResult> DeleteUser(int UserId)
         {
             var UserToDelete = await _UserRepository.GetByIdAsync(UserId);
@@ -81,26 +119,56 @@ namespace WarehouseManagementSystem.Controllers
             return Ok(new BaseResponse<object>("تم حذف المستخدم", true, 200));
         }
 
-        [HttpGet("{UserId}")]
+        [HttpGet("GetUserById/{UserId}")]
         public async Task<IActionResult> GetUserById(int UserId)
         {
             var User = await _UserRepository.GetByIdAsync(UserId);
+            
             if (User == null)
             {
                 return Ok(new BaseResponse<object>("المستخدم غير موجود", false, 404));
             }
+
+            var Roles = _userRoleRepository.Where(u => u.UserId == User.Id).Select(u => u.Role).ToList();
+            var UserPermissions = _userPermissionRepository.Where(u => u.UserId == User.Id).Select(u => u.Permission).ToList();
+            var RolePermissions = _rolePermissionRepository.Where(u=>Roles.Contains(u.Role)).Select(u=>u.Permission).ToList();
+
+            var Permissions = new List<Permission>();
+
+            Permissions.AddRange(RolePermissions);
+            Permissions.AddRange(UserPermissions);
+
             var UserDto = _mapper.Map<UserDto>(User);
+            
+            UserDto.Roles = Roles;
+            UserDto.Permissions = Permissions;
+
             return Ok(new BaseResponse<UserDto>("", true, 200, UserDto));
         }
 
-        [HttpGet("GetAllUsers")]
-        public async Task<BaseResponse<IEnumerable<UserDto>>> GetAllUsers([FromQuery] IndexQuery query)
+        [HttpPost("GetAllUsers")]
+        public async Task<BaseResponse<IEnumerable<UserDto>>> GetAllUsers([FromBody] IndexQuery query)
         {
             FilterObject filterObject = new FilterObject() { Filters = query.filters };
 
             var Users = await _UserRepository.GetFilterThenPagedReponseAsync(filterObject, query.page, query.perPage);
 
             var UsersDtos = _mapper.Map<IEnumerable<UserDto>>(Users);
+
+            foreach(var user in UsersDtos)
+            {
+                var Roles = _userRoleRepository.Where(u => u.UserId == user.Id).Select(u => u.Role).ToList();
+                var UserPermissions = _userPermissionRepository.Where(u => u.UserId == user.Id).Select(u => u.Permission).ToList();
+                var RolePermissions = _rolePermissionRepository.Where(u => Roles.Contains(u.Role)).Select(u => u.Permission).ToList();
+
+                var Permissions = new List<Permission>();
+
+                Permissions.AddRange(RolePermissions);
+                Permissions.AddRange(UserPermissions);
+
+                user.Roles = Roles;
+                user.Permissions = Permissions;
+            }
 
             int Count = _UserRepository.WhereThenFilter(c => true, filterObject).Count();
 

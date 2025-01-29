@@ -22,7 +22,7 @@ namespace WarehouseManagementSystem.Controllers
             _httpContextAccessor = httpContextAccessor;
         }
 
-        [HttpGet("print/sales/{id}")]
+        [HttpGet("PrintSalesInvoiceById/{id}")]
         public async Task<IActionResult> PrintSalesInvoiceById(int id)
         {
             // Fetch the sales invoice by ID
@@ -48,7 +48,7 @@ namespace WarehouseManagementSystem.Controllers
             return File(pdfStream, "application/pdf", $"SalesInvoice_{id}.pdf");
         }
 
-        [HttpGet("print/purchase/{id}")]
+        [HttpGet("PrintPurchaseInvoiceById/{id}")]
         public async Task<IActionResult> PrintPurchaseInvoiceById(int id)
         {
             var purchaseInvoice = await _purchaseInvoiceRepository.GetByIdAsync(id);

@@ -190,8 +190,18 @@ namespace WarehouseManagementSystem.DataBase.Seeders
                 },
                 new Permission()
                 {
-                    //Id = 31,
+                    //Id = 32,
                     PermissionName = "AddPermissionToRole"
+                },
+                new Permission()
+                {
+                    //Id = 33,
+                    PermissionName = "AsignPermissionToUser"
+                },
+                new Permission()
+                {
+                    //Id = 34,
+                    PermissionName = "ApplySeeder"
                 });
 
                 await _context.SaveChangesAsync();

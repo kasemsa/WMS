@@ -2,12 +2,12 @@
 
 namespace WarehouseManagementSystem.Models.Dtos
 {
-    public class AsignRoleToUserRequset
+    public class AsignPermissionToUserRequset
     {
+        [JsonProperty("PermissionId")]
+        public List<int> PermissionId { get; set; }
+
         [JsonProperty("UserId")]
         public int UserId { get; set; }
-
-        [JsonProperty("RoleId")]
-        public int RoleId { get; set; }
     }
 }

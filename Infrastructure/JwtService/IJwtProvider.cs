@@ -10,6 +10,6 @@ namespace WarehouseManagementSystem.Infrastructure.JwtService
     public interface IJwtProvider
     {
         public string Generate(User user);
-        public string GetUserIdFromToken(string token);
+        public int GetUserIdFromToken(string token);
     }
 }

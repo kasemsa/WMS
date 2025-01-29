@@ -1,10 +1,17 @@
 ﻿using Microsoft.EntityFrameworkCore;
+using System.Drawing.Text;
+using WarehouseManagementSystem.Helper;
 using WarehouseManagementSystem.Models;
 
 namespace WarehouseManagementSystem.DataBase
 {
     public class WarehouseDbContext : DbContext
     {
+        public WarehouseDbContext()
+        {
+            
+        }
+
         public WarehouseDbContext(DbContextOptions<WarehouseDbContext> options)
         : base(options)
         {
@@ -15,6 +22,7 @@ namespace WarehouseManagementSystem.DataBase
         public DbSet<Permission> Permissions { get; set; }
         public DbSet<RolePermission> RolePermissions { get; set; }
         public DbSet<UserRole> UserRoles { get; set; }
+        public DbSet<UserToken> UserToken { get; set; }
         public DbSet<UserPermission> UserPermissions { get; set; }
         public DbSet<Product> Products { get; set; }
         public DbSet<Customer> Customers { get; set; }
@@ -40,6 +48,14 @@ namespace WarehouseManagementSystem.DataBase
             modelBuilder.Entity<UserToken>().HasQueryFilter(p => !p.IsDeleted);
 
             base.OnModelCreating(modelBuilder);
+        }
+
+        protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
+        {
+            if (!optionsBuilder.IsConfigured)
+            {
+                optionsBuilder.UseSqlServer(connectionString: GlobalAttributes.sqlConfiguration.connectionString);
+            }
         }
     }
 }

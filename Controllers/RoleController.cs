@@ -17,11 +17,12 @@ namespace WarehouseManagementSystem.Controllers
         private readonly IAsyncRepository<Role> _roleRepository;
         private readonly IAsyncRepository<User> _userRepository;
         private readonly IAsyncRepository<UserRole> _userRoleRepository;
+        private readonly IAsyncRepository<UserPermission> _userPermissionRepository;
         private readonly IAsyncRepository<Permission> _permissionRepository;
         private readonly IAsyncRepository<RolePermission> _rolePermissionRepository;
         private readonly IAsyncRepository<UserToken> _userTokenRepository;
 
-        public RoleController(IAsyncRepository<UserToken> userTokenRepository, IAsyncRepository<UserRole> userRoleRepository, IAsyncRepository<Role> roleRepository, IAsyncRepository<User> userRepository, IAsyncRepository<Permission> permissionRepository, IAsyncRepository<RolePermission> rolePermissionRepository)
+        public RoleController(IAsyncRepository<UserPermission> userPermissionRepository, IAsyncRepository<UserToken> userTokenRepository, IAsyncRepository<UserRole> userRoleRepository, IAsyncRepository<Role> roleRepository, IAsyncRepository<User> userRepository, IAsyncRepository<Permission> permissionRepository, IAsyncRepository<RolePermission> rolePermissionRepository)
         {
             _roleRepository = roleRepository;
             _userRepository = userRepository;
@@ -29,9 +30,10 @@ namespace WarehouseManagementSystem.Controllers
             _permissionRepository = permissionRepository;
             _rolePermissionRepository = rolePermissionRepository;
             _userTokenRepository = userTokenRepository;
+            _userPermissionRepository = userPermissionRepository;
         }
 
-        [HttpPost]
+        [HttpPost("CreateRole")]
         public async Task<IActionResult> CreateRole([FromBody] string RoleName)
         {
             var Role = new Role()
@@ -48,7 +50,7 @@ namespace WarehouseManagementSystem.Controllers
         public async Task<IActionResult> AsignRoleToUser([FromBody] AsignRoleToUserRequset requset)
         {
             var Role = await _roleRepository.FindAsync(r=>r.Id == requset.RoleId);
-            var User = await _userRepository.FindAsync(r=>r.Id == requset.RoleId);
+            var User = await _userRepository.FindAsync(r=>r.Id == requset.UserId);
 
             if(Role == null)
             {
@@ -60,6 +62,13 @@ namespace WarehouseManagementSystem.Controllers
                 return Ok(new BaseResponse<object>("المستخدم غير موجود", false, 404));
             }
 
+            //var UserRoleCheck = _userRoleRepository.Where(u => u.UserId == User.Id && u.RoleId == Role.Id).First();
+            
+            //if(UserRoleCheck != null)
+            //{
+            //    return Ok(new BaseResponse<object>("لا يمكن إسناد دور لهذا المستخدم", false, 400));
+            //}
+            
             var UserRole = new UserRole()
             {
                 RoleId = requset.RoleId,
@@ -74,6 +83,36 @@ namespace WarehouseManagementSystem.Controllers
             {
                 await _userTokenRepository.DeleteAsync(UserToken);
             }
+
+            return Ok(new BaseResponse<object>("تمت العملية بنجاح", true, 200));
+        }
+
+        [HttpPost("AsignPermissionToUser")]
+        public async Task<IActionResult> AsignPermissionToUser([FromBody] AsignPermissionToUserRequset requset)
+        {
+            var User = await _userRepository.FindAsync(r => r.Id == requset.UserId);
+
+            if (User == null)
+            {
+                return Ok(new BaseResponse<object>("المستخدم غير موجود", false, 404));
+            }
+
+            await _userPermissionRepository.DeleteRange(r => r.UserId == User.Id);
+
+            foreach (var permission in requset.PermissionId)
+            {
+                var UserPermission = new UserPermission()
+                {
+                    UserId = requset.UserId,
+                    PermissionId = permission
+                };
+
+                await _userPermissionRepository.AddAsync(UserPermission);
+            }
+
+            var UserToken =  _userTokenRepository.Where(u=>u.UserId == User.Id).First();
+
+            await _userTokenRepository.DeleteAsync(UserToken);
 
             return Ok(new BaseResponse<object>("تمت العملية بنجاح", true, 200));
         }
@@ -110,7 +149,7 @@ namespace WarehouseManagementSystem.Controllers
         }
 
 
-        [HttpDelete("{RoleId}")]
+        [HttpDelete("DeleteRole/{RoleId}")]
         public async Task<IActionResult> DeleteRole(int RoleId)
         {
             var Role = await _roleRepository.GetByIdAsync(RoleId);
@@ -128,8 +167,8 @@ namespace WarehouseManagementSystem.Controllers
             return Ok(new BaseResponse<object>("تم حذف الدور بنجاح", true, 200));
         }
 
-        [HttpGet("GetAllRoles")]
-        public async Task<IActionResult> GetAllRoles([FromQuery] IndexQuery query)
+        [HttpPost("GetAllRoles")]
+        public async Task<IActionResult> GetAllRoles([FromBody] IndexQuery query)
         {
             FilterObject filterObject = new FilterObject() { Filters = query.filters };
 

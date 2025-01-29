@@ -1,8 +1,11 @@
-﻿using Microsoft.Extensions.Options;
+﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
+using WarehouseManagementSystem.DataBase;
 using WarehouseManagementSystem.Infrastructure.JwtService;
 using WarehouseManagementSystem.Models;
 
@@ -53,15 +56,17 @@ namespace WarehouseManagementSystem.Infrastructure.JwtServicen.Authentication
 
             return tokenValue;
         }
-        public string GetUserIdFromToken(string token)
+        public int GetUserIdFromToken(string token)
         {
             var stream = token.Replace("Bearer ",string.Empty);
             var handler = new JwtSecurityTokenHandler();
             var jsonToken = handler.ReadToken(stream);
             var tokenS = jsonToken as JwtSecurityToken;
-            var Id = tokenS!.Claims.First(claim => claim.Type == "Id").Value;
+            var Id = int.Parse(tokenS!.Claims.First(claim => claim.Type == "Id").Value);
             return Id;
         }
+
+        
     }
     
 }

@@ -38,7 +38,7 @@ namespace WarehouseManagementSystem.Controllers
         #endregion
 
         #region Get
-        [HttpGet("sales/{id}")]
+        [HttpGet("GetSalesInvoiceById/{id}")]
         public async Task<BaseResponse<SalesInvoiceDto>> GetSalesInvoiceById(int id)
         {
             var salesInvoice = await _salesInvoiceRepository.GetByIdAsync(id);
@@ -63,7 +63,7 @@ namespace WarehouseManagementSystem.Controllers
             );
         }
 
-        [HttpGet("purchase/{id}")]
+        [HttpGet("GetPurchaseInvoiceById/{id}")]
         public async Task<BaseResponse<PurchaseInvoiceDto>> GetPurchaseInvoiceById(int id)
         {
             var purchaseInvoice = await _purchaseInvoiceRepository.GetByIdAsync(id);
@@ -93,7 +93,7 @@ namespace WarehouseManagementSystem.Controllers
         #endregion
 
         #region Refund 
-        [HttpPost("refund/sales/{id}")]
+        [HttpPost("RefundInvoice/{id}")]
         public async Task<BaseResponse<string>> RefundInvoice(int id)
         {
             // Retrieve the invoice
@@ -163,7 +163,7 @@ namespace WarehouseManagementSystem.Controllers
 
 
 
-        [HttpPost("refund/sales")]
+        [HttpPost("RefundPartialInvoice")]
         public async Task<BaseResponse<string>> RefundPartialInvoice([FromBody] RefundItemDto input)
         {
             // Retrieve the customer based on CustomerId
@@ -270,7 +270,7 @@ namespace WarehouseManagementSystem.Controllers
             );
         }
 
-        [HttpPost("refund/purchase")]
+        [HttpPost("RefundPurchase")]
         public async Task<BaseResponse<string>> RefundPurchase([FromBody] CreatePurchaseInvoiceDto refundRequest)
         {
             var commissary = await _commissaryRepository.GetByIdAsync(refundRequest.CommissaryId);
@@ -334,7 +334,7 @@ namespace WarehouseManagementSystem.Controllers
         #endregion
 
         #region Create
-        [HttpPost("sales")]
+        [HttpPost("CreateSalesInvoice")]
         public async Task<BaseResponse<SalesInvoiceDto>> CreateSalesInvoice([FromForm] CreateSelesInvoiceDto input)
         {
             try
@@ -437,7 +437,7 @@ namespace WarehouseManagementSystem.Controllers
 
 
 
-        [HttpPost("purchase")]
+        [HttpPost("CreatePurchaseInvoice")]
         public async Task<BaseResponse<PurchaseInvoiceDto>> CreatePurchaseInvoice([FromBody] CreatePurchaseInvoiceDto input)
         {
             try
@@ -553,7 +553,7 @@ namespace WarehouseManagementSystem.Controllers
         #endregion
 
         #region Update
-        [HttpPost("sales/{id}")]
+        [HttpPost("UpdateSalesInvoice/{id}")]
         public async Task<BaseResponse<SalesInvoiceDto>> UpdateSalesInvoice(int id, [FromForm] CreateSelesInvoiceDto input)
         {
             try

@@ -27,8 +27,8 @@ namespace WarehouseManagementSystem.Controllers
             _commissaryRepository = commissaryRepository;
             _userRepository = userRepository;
         }
-        [HttpGet("GetAllCommissaries")]
-        public async Task<IActionResult> GetAllCommissaries([FromQuery] IndexQuery query)
+        [HttpPost("GetAllCommissaries")]
+        public async Task<IActionResult> GetAllCommissaries([FromBody] IndexQuery query)
         {
             FilterObject filterObject = new FilterObject() { Filters = query.filters };
 
@@ -43,7 +43,7 @@ namespace WarehouseManagementSystem.Controllers
             return Ok(new BaseResponse<IEnumerable<CommissaryDto>>("", true, 200, commissaryDtos, pagination));
         }
         
-        [HttpGet("{commissaryId}")]
+        [HttpGet("GetCommissaryById/{commissaryId}")]
         public async Task<IActionResult> GetCommissaryById(int commissaryId)
         {
             var commissary = await _commissaryRepository
@@ -57,7 +57,7 @@ namespace WarehouseManagementSystem.Controllers
             return Ok(new BaseResponse<CommissaryDto>("", true, 200, commissaryDto));
         }
 
-        [HttpPost]
+        [HttpPost("CreateCommissary")]
         public async Task<IActionResult> CreateCommissary([FromForm] CreateCommissaryDto commissaryDto)
         {
             //if (!ModelState.IsValid)
@@ -77,7 +77,7 @@ namespace WarehouseManagementSystem.Controllers
             return Ok(new BaseResponse<object>("تم إضافة المندوب بنجاح", true, 200));
         }
 
-        [HttpPut("{commissaryId}")]
+        [HttpPut("UpdateCommissary/{commissaryId}")]
         public async Task<IActionResult> UpdateCommissary([FromForm] UpdateCommissaryDto commissaryDto, int commissaryId)
         {
             var commissary = await _commissaryRepository.GetByIdAsync(commissaryId);
@@ -90,7 +90,7 @@ namespace WarehouseManagementSystem.Controllers
             return Ok(new BaseResponse<object>("تم تعديل المندوب بنجاح", true, 200));
         }
 
-        [HttpDelete("{commissaryId}")]
+        [HttpDelete("DeleteCommissary/{commissaryId}")]
         public async Task<IActionResult> DeleteCommissary(int commissaryId)
         {
             var commissary = await _commissaryRepository.GetByIdAsync(commissaryId);

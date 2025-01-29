@@ -22,7 +22,7 @@ namespace WarehouseManagementSystem.Controllers
             _customerRepository = customerRepository;
         }
 
-        [HttpPost]
+        [HttpPost("CreateCustomer")]
         public async Task<IActionResult> CreateCustomer([FromBody] CreateCustomerDto customerDto)
         {
             // Check if the customer name already exists
@@ -37,7 +37,7 @@ namespace WarehouseManagementSystem.Controllers
             return Ok(new BaseResponse<CustomerDto>("تم إضافة العميل بنجاح"));
         }
 
-        [HttpPut("{customerId}")]
+        [HttpPut("UpdateCustomer/{customerId}")]
         public async Task<IActionResult> UpdateCustomer([FromBody] UpdateCustomerDto customerDto, int customerId)
         {
             var customer = await _customerRepository.GetByIdAsync(customerId);
@@ -57,7 +57,7 @@ namespace WarehouseManagementSystem.Controllers
             return Ok(new BaseResponse<CustomerDto>("تم تعديل بيانات العميل بنجاح"));
         }
 
-        [HttpDelete("{customerId}")]
+        [HttpDelete("DeleteCustomer/{customerId}")]
         public async Task<IActionResult> DeleteCustomer(int customerId)
         {
             var customer = await _customerRepository.GetByIdAsync(customerId);
@@ -70,7 +70,7 @@ namespace WarehouseManagementSystem.Controllers
             return Ok(new BaseResponse<CustomerDto>("تم حذف العميل بنجاح"));
         }
 
-        [HttpGet("{customerId}")]
+        [HttpGet("GetCustomerById/{customerId}")]
         public async Task<IActionResult> GetCustomerById(int customerId)
         {
             var customer = await _customerRepository.GetByIdAsync(customerId);
@@ -83,8 +83,8 @@ namespace WarehouseManagementSystem.Controllers
             return Ok(new BaseResponse<CustomerDto>("", success: true, statusCode: 200, data: customerDto));
         }
 
-        [HttpGet]
-        public async Task<IActionResult> GetAllCustomers([FromQuery] IndexQuery query)
+        [HttpPost("GetAllCustomers")]
+        public async Task<IActionResult> GetAllCustomers([FromBody] IndexQuery query)
         {
             var filterObject = new FilterObject { Filters = query.filters };
 

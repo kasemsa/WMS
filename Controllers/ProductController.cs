@@ -25,7 +25,7 @@ namespace WarehouseManagementSystem.Controllers
             _FileService = FileService;
         }
 
-        [HttpPost]
+        [HttpPost("CreateProduct")]
         public async Task<IActionResult> CreateProduct([FromForm] CreateProductDto product)
         {
             var ProductToAdd = _mapper.Map<Product>(product);
@@ -39,7 +39,7 @@ namespace WarehouseManagementSystem.Controllers
             return Ok(new BaseResponse<object>("تم إضافة المنتج بنجاح", true, 200));
         }
 
-        [HttpPut]
+        [HttpPut("UpdateProduct")]
         public async Task<IActionResult> UpdateProduct([FromForm] UpdateProductDto product, int ProductId)
         {
             var ProductToUpdate = await _ProductRepository.GetByIdAsync(ProductId);
@@ -62,7 +62,7 @@ namespace WarehouseManagementSystem.Controllers
             return Ok(new BaseResponse<object>("تم تعديل المنتج بنجاح", true, 200));
         }
 
-        [HttpDelete("{UserId}")]
+        [HttpDelete("DeleteProduct/{UserId}")]
         public async Task<IActionResult> DeleteProduct(int UserId)
         {
             var ProductToDelete = await _ProductRepository.GetByIdAsync(UserId);
@@ -77,7 +77,7 @@ namespace WarehouseManagementSystem.Controllers
             return Ok(new BaseResponse<object>("تم حذف المنتج", true, 200));
         }
 
-        [HttpGet("{ProductId}")]
+        [HttpGet("GetProductById/{ProductId}")]
         public async Task<IActionResult> GetProductById(int ProductId)
         {
             var Product = await _ProductRepository.GetByIdAsync(ProductId);
@@ -91,8 +91,9 @@ namespace WarehouseManagementSystem.Controllers
 
             return Ok(new BaseResponse<ProductDto>("", true, 200, ProductDto));
         }
-        [HttpGet("GetAllProducts")]
-        public async Task<IActionResult> GetAllProducts([FromQuery] IndexQuery query)
+
+        [HttpPost("GetAllProducts")]
+        public async Task<IActionResult> GetAllProducts([FromBody] IndexQuery query)
         {
             FilterObject filterObject = new FilterObject() { Filters = query.filters };
 

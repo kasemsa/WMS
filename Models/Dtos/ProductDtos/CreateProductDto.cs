@@ -1,19 +1,20 @@
-﻿using System.Text.Json.Serialization;
+﻿using Newtonsoft.Json;
+using System.Text.Json.Serialization;
 
 namespace WarehouseManagementSystem.Models.Dtos.ProductDtos
 {
     public class CreateProductDto
     {
-        [JsonPropertyName("Name")]
+        [JsonProperty("Name")]
         public string Name { get; set; } = string.Empty;
 
-        [JsonPropertyName("Description")]
+        [JsonProperty("Description")]
         public string? Description { get; set; }
 
-        [JsonPropertyName("Price")]
+        [JsonProperty("Price")]
         public decimal Price { get; set; } = 0;
 
-        [JsonPropertyName("ProductImage")]
+        [JsonProperty("ProductImage")]
         public IFormFile? ProductImage { get; set; }
     }
 }

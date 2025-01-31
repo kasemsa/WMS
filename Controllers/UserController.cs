@@ -99,7 +99,11 @@ namespace WarehouseManagementSystem.Controllers
 
             var UserToken = _userTokenRepository.Where(u => u.UserId == UserId).First();
 
-            await _userTokenRepository.DeleteAsync(UserToken);
+            if (UserToken != null)
+            {
+                await _userTokenRepository.DeleteAsync(UserToken);
+            }
+            
 
             return Ok(new BaseResponse<object>("تم تعديل المستخدم بنجاح", true, 200));
         }

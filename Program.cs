@@ -1,3 +1,4 @@
+using Microsoft.Extensions.FileProviders;
 using Microsoft.OpenApi.Models;
 using WarehouseManagementSystem.Contract;
 using WarehouseManagementSystem.Helper;
@@ -56,6 +57,12 @@ if (app.Environment.IsDevelopment())
     app.UseSwaggerUI();
 }
 
+app.UseStaticFiles(new StaticFileOptions
+{
+    FileProvider = new PhysicalFileProvider(
+           Path.Combine(builder.Environment.ContentRootPath, "wwwroot/UploadedFiles")),
+    RequestPath = "/UploadedFiles"
+});
 
 //app.UseMiddleware<AuthenticationMiddleware>();
 app.UseCors("Open");

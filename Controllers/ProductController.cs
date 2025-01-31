@@ -16,13 +16,15 @@ namespace WarehouseManagementSystem.Controllers
     {
         private readonly IAsyncRepository<Product> _ProductRepository;
         private readonly IFileService _FileService;
+        private readonly IHttpContextAccessor _httpContextAccessor;
         private readonly IMapper _mapper;
 
-        public ProductController(IMapper mapper, IAsyncRepository<Product> ProductRepository, IFileService FileService)
+        public ProductController(IHttpContextAccessor httpContextAccessor, IMapper mapper, IAsyncRepository<Product> ProductRepository, IFileService FileService)
         {
             _mapper = mapper;
             _ProductRepository = ProductRepository;
             _FileService = FileService;
+            _httpContextAccessor = httpContextAccessor;
         }
 
         [HttpPost("CreateProduct")]
@@ -89,6 +91,15 @@ namespace WarehouseManagementSystem.Controllers
 
             var ProductDto = _mapper.Map<ProductDto>(Product);
 
+            bool isHttps = _httpContextAccessor.HttpContext!.Request.IsHttps;
+
+            if (ProductDto.Image != null)
+            {
+                ProductDto.Image = isHttps
+                      ? $"https://{_httpContextAccessor.HttpContext?.Request.Host.Value}/UploadedFiles/{ProductDto.Image.Split('\\').LastOrDefault()}"
+                      : $"http://{_httpContextAccessor.HttpContext?.Request.Host.Value}/UploadedFiles/{ProductDto.Image.Split('\\').LastOrDefault()}";
+            }
+
             return Ok(new BaseResponse<ProductDto>("", true, 200, ProductDto));
         }
 
@@ -101,6 +112,17 @@ namespace WarehouseManagementSystem.Controllers
 
             var ProductDtos = _mapper.Map<IEnumerable<ProductDto>>(Products);
 
+            bool isHttps = _httpContextAccessor.HttpContext!.Request.IsHttps;
+
+            foreach (var ProductDto in ProductDtos)
+            {
+                if (ProductDto.Image != null)
+                {
+                    ProductDto.Image = isHttps
+                          ? $"https://{_httpContextAccessor.HttpContext?.Request.Host.Value}/UploadedFiles/{ProductDto.Image.Split('\\').LastOrDefault()}"
+                          : $"http://{_httpContextAccessor.HttpContext?.Request.Host.Value}/UploadedFiles/{ProductDto.Image.Split('\\').LastOrDefault()}";
+                }
+            }
             int Count = _ProductRepository.WhereThenFilter(c => true, filterObject).Count();
 
             Pagination pagination = new Pagination(query.page, query.perPage, Count);

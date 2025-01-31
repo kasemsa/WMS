@@ -58,7 +58,7 @@ namespace WarehouseManagementSystem.Controllers
         }
 
         [HttpPost("CreateCommissary")]
-        public async Task<IActionResult> CreateCommissary([FromForm] CreateCommissaryDto commissaryDto)
+        public async Task<IActionResult> CreateCommissary([FromBody] CreateCommissaryDto commissaryDto)
         {
             //if (!ModelState.IsValid)
             //{
@@ -78,7 +78,7 @@ namespace WarehouseManagementSystem.Controllers
         }
 
         [HttpPut("UpdateCommissary/{commissaryId}")]
-        public async Task<IActionResult> UpdateCommissary([FromForm] UpdateCommissaryDto commissaryDto, int commissaryId)
+        public async Task<IActionResult> UpdateCommissary([FromBody] UpdateCommissaryDto commissaryDto, int commissaryId)
         {
             var commissary = await _commissaryRepository.GetByIdAsync(commissaryId);
             if (commissary == null)

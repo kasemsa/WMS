@@ -166,6 +166,16 @@ namespace WarehouseManagementSystem.DataBase.Seeders
                     //Id = 29,
                     PermissionName = "UpdateSalesInvoice"
                 },
+                new Permission()
+                {
+                    //Id = 30,
+                    PermissionName = "GetAllSelesInvoices"
+                },
+                new Permission()
+                {
+                    //Id = 31,
+                    PermissionName = "GetAllPurchaseInvoices"
+                },
                 // ------Print--------
                 new Permission()
                 {

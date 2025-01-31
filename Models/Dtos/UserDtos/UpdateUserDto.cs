@@ -1,22 +1,23 @@
-﻿using System.Text.Json.Serialization;
+﻿using Newtonsoft.Json;
+using System.Text.Json.Serialization;
 
 namespace WarehouseManagementSystem.Models.Dtos.UserDtos
 {
     public class UpdateUserDto
     {
-        [JsonPropertyName("Name")]
+        [JsonProperty("Name")]
         public string Name { get; set; } = string.Empty;
 
-        [JsonPropertyName("PhoneNumber")]
+        [JsonProperty("PhoneNumber")]
         public string PhoneNumber { get; set; } = string.Empty;
 
-        [JsonPropertyName("Email")]
+        [JsonProperty("Email")]
         public string Email { get; set; } = string.Empty;
 
-        [JsonPropertyName("UserName")]
+        [JsonProperty("UserName")]
         public string UserName { get; set; } = string.Empty;
 
-        [JsonPropertyName("RoleIds")]
+        [JsonProperty("RoleIds")]
         public List<int>? RoleIds { get; set; }
     }
 }

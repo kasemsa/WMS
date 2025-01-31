@@ -37,7 +37,7 @@ namespace WarehouseManagementSystem.Controllers
         }
 
         [HttpPost("LogIn")]
-        public async Task<BaseResponse<AuthenticationResponse>> LogIn(UserloginDto user)
+        public async Task<BaseResponse<AuthenticationResponse>> LogIn(UserLoginDto user)
         {
             var UserToLogin = _userRepository.Where(u=>u.UserName == user.UserName).FirstOrDefault();
            

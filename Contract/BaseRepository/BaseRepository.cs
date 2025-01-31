@@ -88,9 +88,9 @@ namespace WarehouseManagementSystem.Contract.BaseRepository
             {
                 try
                 {
-                    if (typeof(T).GetProperty("isDeleted") != null)
+                    if (typeof(T).GetProperty("IsDeleted") != null)
                     {
-                        typeof(T).GetProperty("isDeleted")!.SetValue(entity, true);
+                        typeof(T).GetProperty("IsDeleted")!.SetValue(entity, true);
                         typeof(T).GetProperty("DeletedAt")!.SetValue(entity, DateTime.UtcNow);
                     }
 

@@ -2,8 +2,10 @@
 using Microsoft.AspNetCore.Mvc;
 using WarehouseManagementSystem.Contract.BaseRepository;
 using WarehouseManagementSystem.Models;
+using WarehouseManagementSystem.Models.Common;
 using WarehouseManagementSystem.Models.Constants;
 using WarehouseManagementSystem.Models.Dtos.InvoiceDtos;
+using WarehouseManagementSystem.Models.Dtos.ProductDtos;
 using WarehouseManagementSystem.Models.Responses;
 
 namespace WarehouseManagementSystem.Controllers
@@ -63,6 +65,23 @@ namespace WarehouseManagementSystem.Controllers
             );
         }
 
+        [HttpGet("GetAllSelesInvoices")]
+        public async Task<BaseResponse<List<SalesInvoiceDto>>> GetAllSelesInvoices(IndexQuery query)
+        {
+            FilterObject filterObject = new FilterObject() { Filters = query.filters };
+    
+            var SelesInvoices = await _salesInvoiceRepository.GetFilterThenPagedReponseAsync(filterObject,  query.page, query.perPage);
+
+            var salesInvoicesDto = _mapper.Map<List<SalesInvoiceDto>>(SelesInvoices);
+
+            int Count = _salesInvoiceRepository.WhereThenFilter(c => true, filterObject).Count();
+           
+            Pagination pagination = new Pagination(query.page, query.perPage, Count);
+
+            return new BaseResponse<List<SalesInvoiceDto>>("", true, 200, salesInvoicesDto, pagination);
+
+        }
+
         [HttpGet("GetPurchaseInvoiceById/{id}")]
         public async Task<BaseResponse<PurchaseInvoiceDto>> GetPurchaseInvoiceById(int id)
         {
@@ -88,7 +107,22 @@ namespace WarehouseManagementSystem.Controllers
             );
         }
 
+        [HttpGet("GetAllPurchaseInvoices")]
+        public async Task<BaseResponse<List<PurchaseInvoiceDto>>> GetAllSelesInvoice(IndexQuery query)
+        {
+            FilterObject filterObject = new FilterObject() { Filters = query.filters };
 
+            var PurchaseInvoices = await _purchaseInvoiceRepository.GetFilterThenPagedReponseAsync(filterObject, query.page, query.perPage);
+
+            var PurchaseInvoicesDto = _mapper.Map<List<PurchaseInvoiceDto>>(PurchaseInvoices);
+
+            int Count = _purchaseInvoiceRepository.WhereThenFilter(c => true, filterObject).Count();
+
+            Pagination pagination = new Pagination(query.page, query.perPage, Count);
+
+            return new BaseResponse<List<PurchaseInvoiceDto>>("", true, 200, PurchaseInvoicesDto, pagination);
+
+        }
 
         #endregion
 
@@ -335,7 +369,7 @@ namespace WarehouseManagementSystem.Controllers
 
         #region Create
         [HttpPost("CreateSalesInvoice")]
-        public async Task<BaseResponse<SalesInvoiceDto>> CreateSalesInvoice([FromForm] CreateSelesInvoiceDto input)
+        public async Task<BaseResponse<SalesInvoiceDto>> CreateSalesInvoice([FromBody] CreateSelesInvoiceDto input)
         {
             try
             {
@@ -553,8 +587,8 @@ namespace WarehouseManagementSystem.Controllers
         #endregion
 
         #region Update
-        [HttpPost("UpdateSalesInvoice/{id}")]
-        public async Task<BaseResponse<SalesInvoiceDto>> UpdateSalesInvoice(int id, [FromForm] CreateSelesInvoiceDto input)
+        [HttpPut("UpdateSalesInvoice/{id}")]
+        public async Task<BaseResponse<SalesInvoiceDto>> UpdateSalesInvoice(int id, [FromBody] CreateSelesInvoiceDto input)
         {
             try
             {

@@ -37,10 +37,27 @@ namespace WarehouseManagementSystem.Controllers
         [HttpPost("CreateUser")]
         public async Task<IActionResult> CreateUser([FromBody] CreateUserDto user)
         {
-            if(user.Password != user.ConfirmPassword)
+            // Validation User Info
+            var checkUser = _UserRepository.Where(u => u.UserName == user.UserName).First();
+
+            if (checkUser != null)
+            {
+                return Ok(new BaseResponse<object>("إسم المستخدم موجود مسبقا", false, 400));
+            }
+
+            checkUser = _UserRepository.Where(u => u.Email == user.Email).First();
+
+            if (checkUser != null)
+            {
+                return Ok(new BaseResponse<object>("البريد الالكتروني موجود مسبقا", false, 400));
+            }
+
+
+            if (user.Password != user.ConfirmPassword)
             {
                 return Ok(new BaseResponse<object>("كلمة السر غير متطابقة", false, 400));
             }
+
 
             var UserToAdd = _mapper.Map<User>(user);
 

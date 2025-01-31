@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using WarehouseManagementSystem.Contract.BaseRepository;
 using WarehouseManagementSystem.Contract.SeedServices;
+using WarehouseManagementSystem.DataBase;
 using WarehouseManagementSystem.Infrastructure.JwtService;
 using WarehouseManagementSystem.Models;
 using WarehouseManagementSystem.Models.Dtos;
@@ -96,6 +97,21 @@ namespace WarehouseManagementSystem.Controllers
             await _seedServices.Initialize(_serviceProvider);
 
             return Ok(new BaseResponse<object>("تمت العملية بنجاح", true, 200));
+        }
+
+        [HttpGet("MigrateDatabase", Name = "MigrateDatabase")]
+        public async Task<IActionResult> MigrateDatabase()
+        {
+            var db = _serviceProvider.GetService<WarehouseDbContext>();
+
+            // Drop the existing database
+            await db!.Database.EnsureDeletedAsync();
+
+            // Recreate the database schema
+            await db.Database.EnsureCreatedAsync();
+
+            return Ok(new BaseResponse<object>("تمت العملية بنجاح", true, 200));
+
         }
     }
 }

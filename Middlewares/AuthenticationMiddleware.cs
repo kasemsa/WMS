@@ -74,7 +74,8 @@ namespace WarehouseManagementSystem.Middlewares
             List<string> enableRoutes = new List<string>
             {
                 "/api/Authentication/LogIn",
-                "/api/Authentication/ApplySeeder"
+                "/api/Authentication/ApplySeeder",
+                "/api/Authentication/MigrateDatabase"
             };
 
             bool iEneabledUnauthorizedRoute = false;

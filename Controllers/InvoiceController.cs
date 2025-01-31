@@ -107,55 +107,20 @@ namespace WarehouseManagementSystem.Controllers
             );
         }
 
-        [HttpPost("GetAllSalesInvoices")]
-        public async Task<IActionResult> GetAllSalesInvoices([FromBody] IndexQuery query)
-        {
-            FilterObject filterObject = new() { Filters = query.filters };
-
-            var salesInvoices = await _salesInvoiceRepository.GetFilterThenPagedReponseAsync(
-                filterObject, query.page, query.perPage
-            );
-
-            var salesInvoiceDtos = _mapper.Map<IEnumerable<SalesInvoiceDto>>(salesInvoices);
-
-            int count = _salesInvoiceRepository.WhereThenFilter(c => true, filterObject).Count();
-
-            Pagination pagination = new Pagination(query.page, query.perPage, count);
-
-            return Ok(new BaseResponse<IEnumerable<SalesInvoiceDto>>(
-                message: "Sales invoices retrieved successfully.",
-                success: true,
-                statusCode: 200,
-                data: salesInvoiceDtos,
-                pagination: pagination
-            ));
-        }
-
         [HttpPost("GetAllPurchaseInvoices")]
-        public async Task<IActionResult> GetAllPurchaseInvoices([FromBody] IndexQuery query)
+        public async Task<BaseResponse<List<PurchaseInvoiceDto>>> GetAllPurchaseInvoices([FromBody] IndexQuery query)
         {
-            FilterObject filterObject = new() { Filters = query.filters };
+            FilterObject filterObject = new FilterObject() { Filters = query.filters };
+    
+            var PurchaseInvoice = await _purchaseInvoiceRepository.GetFilterThenPagedReponseAsync(filterObject,  query.page, query.perPage);
 
-            // Retrieve paginated and filtered purchase invoices
-            var purchaseInvoices = await _purchaseInvoiceRepository.GetFilterThenPagedReponseAsync(
-                filterObject, query.page, query.perPage
-            );
+            var PurchaseInvoiceDto = _mapper.Map<List<PurchaseInvoiceDto>>(PurchaseInvoice);
 
-            var purchaseInvoiceDtos = _mapper.Map<IEnumerable<PurchaseInvoiceDto>>(purchaseInvoices);
+            int Count = _purchaseInvoiceRepository.WhereThenFilter(c => true, filterObject).Count();
+           
+            Pagination pagination = new Pagination(query.page, query.perPage, Count);
 
-            int count = _purchaseInvoiceRepository.WhereThenFilter(c => true, filterObject).Count();
-
-            Pagination pagination = new Pagination(query.page, query.perPage, count);
-
-            return Ok(new BaseResponse<IEnumerable<PurchaseInvoiceDto>>(
-                message: "Purchase invoices retrieved successfully.",
-                success: true,
-                statusCode: 200,
-                data: purchaseInvoiceDtos,
-                pagination: pagination
-            ));
-        }
-
+            return  new BaseResponse<List<PurchaseInvoiceDto>>("", true, 200, PurchaseInvoiceDto, pagination);
         }
 
         #endregion
@@ -228,8 +193,6 @@ namespace WarehouseManagementSystem.Controllers
                 statusCode: 200
             );
         }
-
-
 
         [HttpPost("RefundPartialInvoice")]
         public async Task<BaseResponse<string>> RefundPartialInvoice([FromBody] RefundItemDto input)

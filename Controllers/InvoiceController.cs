@@ -43,7 +43,7 @@ namespace WarehouseManagementSystem.Controllers
         [HttpGet("GetSalesInvoiceById/{id}")]
         public async Task<BaseResponse<SalesInvoiceDto>> GetSalesInvoiceById(int id)
         {
-            var salesInvoice = await _salesInvoiceRepository.GetByIdAsync(id);
+            var salesInvoice = await _salesInvoiceRepository.GetByIdAsync(id, si => si.InvoiceItems);
 
             if (salesInvoice == null)
             {
@@ -85,7 +85,7 @@ namespace WarehouseManagementSystem.Controllers
         [HttpGet("GetPurchaseInvoiceById/{id}")]
         public async Task<BaseResponse<PurchaseInvoiceDto>> GetPurchaseInvoiceById(int id)
         {
-            var purchaseInvoice = await _purchaseInvoiceRepository.GetByIdAsync(id);
+            var purchaseInvoice = await _purchaseInvoiceRepository.GetByIdAsync(id, si => si.InvoiceItems);
 
             if (purchaseInvoice == null)
             {
@@ -107,20 +107,54 @@ namespace WarehouseManagementSystem.Controllers
             );
         }
 
-        [HttpGet("GetAllPurchaseInvoices")]
-        public async Task<BaseResponse<List<PurchaseInvoiceDto>>> GetAllSelesInvoice(IndexQuery query)
+        [HttpPost("GetAllSalesInvoices")]
+        public async Task<IActionResult> GetAllSalesInvoices([FromBody] IndexQuery query)
         {
-            FilterObject filterObject = new FilterObject() { Filters = query.filters };
+            FilterObject filterObject = new() { Filters = query.filters };
 
-            var PurchaseInvoices = await _purchaseInvoiceRepository.GetFilterThenPagedReponseAsync(filterObject, query.page, query.perPage);
+            var salesInvoices = await _salesInvoiceRepository.GetFilterThenPagedReponseAsync(
+                filterObject, query.page, query.perPage
+            );
 
-            var PurchaseInvoicesDto = _mapper.Map<List<PurchaseInvoiceDto>>(PurchaseInvoices);
+            var salesInvoiceDtos = _mapper.Map<IEnumerable<SalesInvoiceDto>>(salesInvoices);
 
-            int Count = _purchaseInvoiceRepository.WhereThenFilter(c => true, filterObject).Count();
+            int count = _salesInvoiceRepository.WhereThenFilter(c => true, filterObject).Count();
 
-            Pagination pagination = new Pagination(query.page, query.perPage, Count);
+            Pagination pagination = new Pagination(query.page, query.perPage, count);
 
-            return new BaseResponse<List<PurchaseInvoiceDto>>("", true, 200, PurchaseInvoicesDto, pagination);
+            return Ok(new BaseResponse<IEnumerable<SalesInvoiceDto>>(
+                message: "Sales invoices retrieved successfully.",
+                success: true,
+                statusCode: 200,
+                data: salesInvoiceDtos,
+                pagination: pagination
+            ));
+        }
+
+        [HttpPost("GetAllPurchaseInvoices")]
+        public async Task<IActionResult> GetAllPurchaseInvoices([FromBody] IndexQuery query)
+        {
+            FilterObject filterObject = new() { Filters = query.filters };
+
+            // Retrieve paginated and filtered purchase invoices
+            var purchaseInvoices = await _purchaseInvoiceRepository.GetFilterThenPagedReponseAsync(
+                filterObject, query.page, query.perPage
+            );
+
+            var purchaseInvoiceDtos = _mapper.Map<IEnumerable<PurchaseInvoiceDto>>(purchaseInvoices);
+
+            int count = _purchaseInvoiceRepository.WhereThenFilter(c => true, filterObject).Count();
+
+            Pagination pagination = new Pagination(query.page, query.perPage, count);
+
+            return Ok(new BaseResponse<IEnumerable<PurchaseInvoiceDto>>(
+                message: "Purchase invoices retrieved successfully.",
+                success: true,
+                statusCode: 200,
+                data: purchaseInvoiceDtos,
+                pagination: pagination
+            ));
+        }
 
         }
 
@@ -695,15 +729,23 @@ namespace WarehouseManagementSystem.Controllers
         {
             return invoiceItems.Sum(item => item.Price * item.Quantity);
         }
-        // TODO
         private decimal CalculateDiscount(DiscountType? discountType, decimal discountValue, decimal totalProductsPrice)
         {
-            if (!discountType.HasValue) return 0;
-            return discountValue;
-            //return discountType == DiscountType.Percentage
-            //    ? totalProductsPrice * (discountValue / 100)
-            //    : Math.Min(discountValue, totalProductsPrice);
+            if (!discountType.HasValue || totalProductsPrice <= 0) return 0;
+
+            decimal finalDiscount = discountValue;
+
+            if (discountType == DiscountType.Normal)
+            {
+                // Ensure Normal discount does not exceed 3.5% of totalProductsPrice
+                decimal maxAllowedDiscount = totalProductsPrice * 0.035m;
+                finalDiscount = Math.Min(discountValue, maxAllowedDiscount);
+            }
+
+            // Ensure final discount does not exceed total invoice value
+            return Math.Min(finalDiscount, totalProductsPrice);
         }
+
 
         private decimal CalculateCurrentBalance(decimal previousBalance, decimal invoiceTotal, decimal payment)
         {

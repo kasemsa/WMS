@@ -30,6 +30,19 @@ namespace WarehouseManagementSystem.Contract.BaseRepository
             return t;
         }
 
+        public virtual async Task<T?> GetByIdAsync(int id, params Expression<Func<T, object>>[] includes)
+        {
+            IQueryable<T> query = _DbSet;
+
+            // Apply Includes if provided
+            foreach (var include in includes)
+            {
+                query = query.Include(include);
+            }
+
+            return await query.FirstOrDefaultAsync(e => EF.Property<int>(e, "Id") == id);
+        }
+
         public async Task<T> FindAsync(Expression<Func<T, bool>> criteria)
         {
             return await _DbSet.SingleOrDefaultAsync(criteria);

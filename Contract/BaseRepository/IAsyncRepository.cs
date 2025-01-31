@@ -25,6 +25,7 @@ namespace WarehouseManagementSystem.Contract.BaseRepository
         IQueryable<T> ListAllAsync(FilterObject filterObject);
         Task<T> GetByIdAsync(int? id);
         Task<T?> GetByIdAsync(int id);
+        Task<T?> GetByIdAsync(int id, params Expression<Func<T, object>>[] includes);
         Task<T> AddAsync(T entity);
         Task<T> AddAsync(T entity, string token);
         Task UpdateAsync(T entity);

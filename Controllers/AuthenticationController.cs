@@ -1,12 +1,9 @@
 ﻿using AutoMapper;
-using Microsoft.AspNetCore.Cryptography.KeyDerivation;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
 using WarehouseManagementSystem.Contract.BaseRepository;
 using WarehouseManagementSystem.Contract.SeedServices;
 using WarehouseManagementSystem.Infrastructure.JwtService;
 using WarehouseManagementSystem.Models;
-using WarehouseManagementSystem.Models.Dtos;
 using WarehouseManagementSystem.Models.Responses;
 
 namespace WarehouseManagementSystem.Controllers
@@ -36,59 +33,59 @@ namespace WarehouseManagementSystem.Controllers
             _serviceProvider = serviceProvider;
         }
 
-        [HttpPost("LogIn")]
-        public async Task<BaseResponse<AuthenticationResponse>> LogIn(UserloginDto user)
-        {
-            var UserToLogin = _userRepository.Where(u=>u.UserName == user.UserName).FirstOrDefault();
-           
-            if(UserToLogin == null)
-            {
-                return new BaseResponse<AuthenticationResponse>("عذرا لا يمكن تسجيل الدخول", false, 401);
-            }
+        //[HttpPost("LogIn")]
+        //public async Task<BaseResponse<AuthenticationResponse>> LogIn(UserloginDto user)
+        //{
+        //    var UserToLogin = _userRepository.Where(u=>u.UserName == user.UserName).FirstOrDefault();
 
-            byte[] salt = new byte[16] { 41, 214, 78, 222, 28, 87, 170, 211, 217, 125, 200, 214, 185, 144, 44, 34 };
+        //    if(UserToLogin == null)
+        //    {
+        //        return new BaseResponse<AuthenticationResponse>("عذرا لا يمكن تسجيل الدخول", false, 401);
+        //    }
 
-            var passwprd = Convert.ToBase64String(KeyDerivation.Pbkdf2(
-                password: user.Password,
-                salt: salt,
-                prf: KeyDerivationPrf.HMACSHA256,
-                iterationCount: 100000,
-                numBytesRequested: 256 / 8));
+        //    byte[] salt = new byte[16] { 41, 214, 78, 222, 28, 87, 170, 211, 217, 125, 200, 214, 185, 144, 44, 34 };
 
-            if(passwprd != UserToLogin.Password)
-            {
-                return new BaseResponse<AuthenticationResponse>("عذرا لا يمكن تسجيل الدخول", false, 401);
-            }
-            var UserRoles = _roleRepository.Where(r => r.UserId == UserToLogin.Id).Include(r=>r.Role).Select(r => r.Role).ToList();
+        //    var passwprd = Convert.ToBase64String(KeyDerivation.Pbkdf2(
+        //        password: user.Password,
+        //        salt: salt,
+        //        prf: KeyDerivationPrf.HMACSHA256,
+        //        iterationCount: 100000,
+        //        numBytesRequested: 256 / 8));
 
-            var Permissions = _rolePermissionRepository.Where(p => UserRoles.Contains(p.Role)).Include(p => p.Permission).Select(p => p.Permission).ToList();
-            
-            var token = _userTokenRepository.Where(u => u.UserId == UserToLogin.Id).Select(u=>u.Token).FirstOrDefault();
-            
-            var Response = _mapper.Map<AuthenticationResponse>(UserToLogin);
-            
-            Response.Roles = UserRoles;
-            Response.Permissions = Permissions;
-            Response.Token = token;
+        //    if(passwprd != UserToLogin.Password)
+        //    {
+        //        return new BaseResponse<AuthenticationResponse>("عذرا لا يمكن تسجيل الدخول", false, 401);
+        //    }
+        //    var UserRoles = _roleRepository.Where(r => r.UserId == UserToLogin.Id).Include(r=>r.Role).Select(r => r.Role).ToList();
 
-            if (token == null)
-            {
-                var Token = _jwtProvider.Generate(UserToLogin);
+        //    var Permissions = _rolePermissionRepository.Where(p => UserRoles.Contains(p.Role)).Include(p => p.Permission).Select(p => p.Permission).ToList();
 
-                var UserToken = new UserToken();
+        //    var token = _userTokenRepository.Where(u => u.UserId == UserToLogin.Id).Select(u=>u.Token).FirstOrDefault();
 
-                UserToken.Token = Token;
-                UserToken.UserId = UserToLogin.Id;
+        //    var Response = _mapper.Map<AuthenticationResponse>(UserToLogin);
 
-                await _userTokenRepository.AddAsync(UserToken);
+        //    Response.Roles = UserRoles;
+        //    Response.Permissions = Permissions;
+        //    Response.Token = token;
 
-                Response.Token = Token;
+        //    if (token == null)
+        //    {
+        //        var Token = _jwtProvider.Generate(UserToLogin);
 
-                return new BaseResponse<AuthenticationResponse>(Response, "تم تسجيل الدخول بنجاح", true,200);
-            }
-            else return new BaseResponse<AuthenticationResponse>(Response, "لقد فمت بتسجيل الدخول", true, 200);
+        //        var UserToken = new UserToken();
 
-        }
+        //        UserToken.Token = Token;
+        //        UserToken.UserId = UserToLogin.Id;
+
+        //        await _userTokenRepository.AddAsync(UserToken);
+
+        //        Response.Token = Token;
+
+        //        return new BaseResponse<AuthenticationResponse>(Response, "تم تسجيل الدخول بنجاح", true,200);
+        //    }
+        //    else return new BaseResponse<AuthenticationResponse>(Response, "لقد فمت بتسجيل الدخول", true, 200);
+
+        //}
 
         [HttpGet("ApplySeeder", Name = "ApplySeeder")]
         public async Task<IActionResult> ApplySeeder()

@@ -2,6 +2,8 @@
 {
     public enum DiscountType
     {
-
+        Bonus = 0,
+        Normal,
+        Administrative
     }
 }

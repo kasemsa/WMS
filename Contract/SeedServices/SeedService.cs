@@ -30,6 +30,13 @@ namespace WarehouseManagementSystem.Contract.SeedServices
 
                 var UserSeeder = new UserSeeder(context); 
                 await UserSeeder.Seed();
+                
+                var CommissarySeeder = new CommissarySeeder(context); 
+                await CommissarySeeder.Seed(); 
+                
+                var UserRoleSeeder = new UserRoleSeeder(context); 
+                await UserRoleSeeder.Seed();
+
             }
         }
     }

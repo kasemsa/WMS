@@ -169,7 +169,7 @@ namespace WarehouseManagementSystem.DataBase.Seeders
                 new Permission()
                 {
                     //Id = 30,
-                    PermissionName = "GetAllSelesInvoices"
+                    PermissionName = "GetAllSalesInvoices"
                 },
                 new Permission()
                 {

@@ -18,12 +18,13 @@ namespace WarehouseManagementSystem.Infrastructure.JwtServicen.Authentication
         {
             _options = options.Value;
         }
-        public string Generate(User user)
+        public string Generate(User user, int CommissaryId)
         {
             var claims = new Claim[]
             {
                 new ("Id", user.Id.ToString()),
-                new ("Email", user.Email.ToString())
+                new ("Email", user.Email.ToString()),
+                new ("CommissaryId", CommissaryId.ToString())
             };
 
             var signingCredentials = new SigningCredentials(
@@ -56,6 +57,17 @@ namespace WarehouseManagementSystem.Infrastructure.JwtServicen.Authentication
 
             return tokenValue;
         }
+
+        public int GetCommissaryIdFromToken(string token)
+        {
+            var stream = token.Replace("Bearer ", string.Empty);
+            var handler = new JwtSecurityTokenHandler();
+            var jsonToken = handler.ReadToken(stream);
+            var tokenS = jsonToken as JwtSecurityToken;
+            var Id = int.Parse(tokenS!.Claims.First(claim => claim.Type == "CommissaryId").Value);
+            return Id;
+        }
+
         public int GetUserIdFromToken(string token)
         {
             var stream = token.Replace("Bearer ",string.Empty);

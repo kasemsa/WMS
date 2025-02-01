@@ -7,9 +7,6 @@ namespace WarehouseManagementSystem.Models.Dtos.InvoiceDtos
         [JsonProperty("CustomerId")]
         public int CustomerId { get; set; }
 
-        [JsonProperty("CommissaryId")]
-        public int CommissaryId { get; set; }
-
         [JsonProperty("InvoiceItems")]
         public required List<InvoiceItemDto> InvoiceItems { get; set; } = [];
     }

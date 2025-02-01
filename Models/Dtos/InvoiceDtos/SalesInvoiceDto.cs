@@ -1,9 +1,10 @@
 ﻿using Newtonsoft.Json;
+using WarehouseManagementSystem.Models.Common;
 using WarehouseManagementSystem.Models.Constants;
 
 namespace WarehouseManagementSystem.Models.Dtos.InvoiceDtos
 {
-    public class SalesInvoiceDto
+    public class SalesInvoiceDto : AuditableEntity
     {
         [JsonProperty("Id")]
         public int Id { get; set; }
@@ -35,8 +36,14 @@ namespace WarehouseManagementSystem.Models.Dtos.InvoiceDtos
         [JsonProperty("CustomerId")]
         public int CustomerId { get; set; }
 
+        [JsonProperty("CustomerName")]
+        public string? CustomerName { get; set; }
+
         [JsonProperty("CommissaryId")]
         public int CommissaryId { get; set; }
+        
+        [JsonProperty("CommissaryName")]
+        public string? CommissaryName { get; set; }
 
         [JsonProperty("InvoiceItems")]
         public List<InvoiceItemDto> InvoiceItems { get; set; }

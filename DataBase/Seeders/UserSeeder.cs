@@ -32,6 +32,20 @@ namespace WarehouseManagementSystem.DataBase.Seeders
                         prf: KeyDerivationPrf.HMACSHA256,
                         iterationCount: 100000,
                         numBytesRequested: 256 / 8))
+                   },
+                   new User
+                   {
+                       // Id = 2,
+                       Name = "CommissaryAdmin",
+                       UserName = "CommissaryAdmin",
+                       PhoneNumber = "1234567890",
+                       Email = "Commissary@admin.com",
+                       Password = Convert.ToBase64String(KeyDerivation.Pbkdf2(
+                        password: "Admin123",
+                        salt: salt,
+                        prf: KeyDerivationPrf.HMACSHA256,
+                        iterationCount: 100000,
+                        numBytesRequested: 256 / 8))
                    });
                 await _context.SaveChangesAsync();
             }

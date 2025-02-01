@@ -2,6 +2,7 @@
 using Microsoft.AspNetCore.Cryptography.KeyDerivation;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using Newtonsoft.Json.Linq;
 using WarehouseManagementSystem.Contract.BaseRepository;
 using WarehouseManagementSystem.Contract.SeedServices;
 using WarehouseManagementSystem.DataBase;
@@ -20,12 +21,13 @@ namespace WarehouseManagementSystem.Controllers
         private readonly IAsyncRepository<UserToken> _userTokenRepository;
         private readonly IAsyncRepository<UserRole> _roleRepository;
         private readonly IAsyncRepository<RolePermission> _rolePermissionRepository;
+        private readonly IAsyncRepository<Commissary> _commissaryRepository;
         private readonly IMapper _mapper;
         private readonly IJwtProvider _jwtProvider;
         private readonly IServiceProvider _serviceProvider;
         private readonly ISeedService _seedServices;
 
-        public AuthenticationController(ISeedService seedServices, IServiceProvider serviceProvider, IAsyncRepository<RolePermission> rolePermissionRepository, IAsyncRepository<UserRole> roleRepository, IAsyncRepository<User> userRepository, IAsyncRepository<UserToken> userTokenRepository, IMapper mapper, IJwtProvider jwtProvider)
+        public AuthenticationController(IAsyncRepository<Commissary> commissaryRepository, ISeedService seedServices, IServiceProvider serviceProvider, IAsyncRepository<RolePermission> rolePermissionRepository, IAsyncRepository<UserRole> roleRepository, IAsyncRepository<User> userRepository, IAsyncRepository<UserToken> userTokenRepository, IMapper mapper, IJwtProvider jwtProvider)
         {
             _userRepository = userRepository;
             _userTokenRepository = userTokenRepository;
@@ -35,6 +37,7 @@ namespace WarehouseManagementSystem.Controllers
             _rolePermissionRepository = rolePermissionRepository;
             _seedServices = seedServices;
             _serviceProvider = serviceProvider;
+            _commissaryRepository = commissaryRepository;
         }
 
         [HttpPost("LogIn")]
@@ -64,7 +67,28 @@ namespace WarehouseManagementSystem.Controllers
 
             var Permissions = _rolePermissionRepository.Where(p => UserRoles.Contains(p.Role)).Include(p => p.Permission).Select(p => p.Permission).ToList();
 
-            var token = _userTokenRepository.Where(u => u.UserId == UserToLogin.Id).Select(u => u.Token).FirstOrDefault();
+            var commissary = _commissaryRepository.Where(c => c.UserId == UserToLogin.Id).First();
+
+            var token = commissary == null
+                ? _jwtProvider.Generate(UserToLogin, 0)
+                : _jwtProvider.Generate(UserToLogin, commissary.Id);
+
+            var userToken = _userTokenRepository.Where(u => u.UserId == UserToLogin.Id).First();
+            
+            if(userToken == null)
+            {
+                var UserToken = new UserToken();
+
+                UserToken.Token = token;
+                UserToken.UserId = UserToLogin.Id;
+
+                await _userTokenRepository.AddAsync(UserToken);
+            }
+            else
+            {
+                userToken.Token = token;
+                await _userTokenRepository.UpdateAsync(userToken);
+            }
 
             var Response = _mapper.Map<AuthenticationResponse>(UserToLogin);
 
@@ -72,23 +96,7 @@ namespace WarehouseManagementSystem.Controllers
             Response.Permissions = Permissions;
             Response.Token = token;
 
-            if (token == null)
-            {
-                var Token = _jwtProvider.Generate(UserToLogin);
-
-                var UserToken = new UserToken();
-
-                UserToken.Token = Token;
-                UserToken.UserId = UserToLogin.Id;
-
-                await _userTokenRepository.AddAsync(UserToken);
-
-                Response.Token = Token;
-
-                return new BaseResponse<AuthenticationResponse>(Response, "تم تسجيل الدخول بنجاح", true, 200);
-            }
-            else return new BaseResponse<AuthenticationResponse>(Response, "لقد فمت بتسجيل الدخول", true, 200);
-
+            return new BaseResponse<AuthenticationResponse>(Response, "تم تسجيل الدخول بنجاح", true, 200);
         }
 
         [HttpGet("ApplySeeder", Name = "ApplySeeder")]

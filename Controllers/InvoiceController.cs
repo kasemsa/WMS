@@ -1,6 +1,7 @@
 ﻿using AutoMapper;
 using Microsoft.AspNetCore.Mvc;
 using WarehouseManagementSystem.Contract.BaseRepository;
+using WarehouseManagementSystem.Infrastructure.JwtService;
 using WarehouseManagementSystem.Models;
 using WarehouseManagementSystem.Models.Common;
 using WarehouseManagementSystem.Models.Constants;
@@ -20,6 +21,8 @@ namespace WarehouseManagementSystem.Controllers
         private readonly IAsyncRepository<Customer> _customerRepository;
         private readonly IAsyncRepository<SalesInvoice> _salesInvoiceRepository;
         private readonly IAsyncRepository<PurchaseInvoice> _purchaseInvoiceRepository;
+        private readonly IJwtProvider _jwtProvider;
+                
         private readonly IMapper _mapper;
 
         public InvoiceController(
@@ -28,6 +31,7 @@ namespace WarehouseManagementSystem.Controllers
             IAsyncRepository<Commissary> commissaryRepository,
             IAsyncRepository<Customer> customerRepository,
             IAsyncRepository<PurchaseInvoice> purchaseInvoiceRepository,
+            IJwtProvider jwtProvider,
             IMapper mapper)
         {
             _productRepository = productRepository;
@@ -35,6 +39,7 @@ namespace WarehouseManagementSystem.Controllers
             _commissaryRepository = commissaryRepository;
             _customerRepository = customerRepository;
             _purchaseInvoiceRepository = purchaseInvoiceRepository;
+            _jwtProvider = jwtProvider;
             _mapper = mapper;
         }
         #endregion
@@ -57,6 +62,18 @@ namespace WarehouseManagementSystem.Controllers
 
             var salesInvoiceDto = _mapper.Map<SalesInvoiceDto>(salesInvoice);
 
+            var Commissary = await _commissaryRepository.GetByIdAsync(salesInvoiceDto.CommissaryId);
+
+            salesInvoiceDto.CommissaryName = Commissary == null
+                ? null!
+                : Commissary.Name;
+
+            var Customer = await _customerRepository.GetByIdAsync(salesInvoiceDto.CustomerId);
+
+            salesInvoiceDto.CustomerName = Customer == null
+                ? null!
+                : Customer.Name;
+
             return new BaseResponse<SalesInvoiceDto>(
                 message: "Sales invoice retrieved successfully.",
                 success: true,
@@ -65,7 +82,7 @@ namespace WarehouseManagementSystem.Controllers
             );
         }
 
-        [HttpGet("GetAllSelesInvoices")]
+        [HttpGet("GetAllSalesInvoices")]
         public async Task<BaseResponse<List<SalesInvoiceDto>>> GetAllSelesInvoices(IndexQuery query)
         {
             FilterObject filterObject = new FilterObject() { Filters = query.filters };
@@ -73,6 +90,21 @@ namespace WarehouseManagementSystem.Controllers
             var SelesInvoices = await _salesInvoiceRepository.GetFilterThenPagedReponseAsync(filterObject,  query.page, query.perPage);
 
             var salesInvoicesDto = _mapper.Map<List<SalesInvoiceDto>>(SelesInvoices);
+
+            foreach (var item in salesInvoicesDto)
+            {
+                var Commissary = await _commissaryRepository.GetByIdAsync(item.CommissaryId);
+
+                item.CommissaryName = Commissary == null
+                    ? null!
+                    : Commissary.Name;
+
+                var Customer = await _customerRepository.GetByIdAsync(item.CustomerId);
+
+                item.CustomerName = Customer == null
+                    ? null!
+                    : Customer.Name;
+            }
 
             int Count = _salesInvoiceRepository.WhereThenFilter(c => true, filterObject).Count();
            
@@ -87,6 +119,8 @@ namespace WarehouseManagementSystem.Controllers
         {
             var purchaseInvoice = await _purchaseInvoiceRepository.GetByIdAsync(id, si => si.InvoiceItems);
 
+            
+
             if (purchaseInvoice == null)
             {
                 return new BaseResponse<PurchaseInvoiceDto>(
@@ -99,6 +133,12 @@ namespace WarehouseManagementSystem.Controllers
 
             var purchaseInvoiceDto = _mapper.Map<PurchaseInvoiceDto>(purchaseInvoice);
 
+            var Commissary = await _commissaryRepository.GetByIdAsync(purchaseInvoiceDto.CommissaryId);
+
+            purchaseInvoiceDto.CommissaryName = Commissary == null
+                ?null
+                : Commissary.Name;
+
             return new BaseResponse<PurchaseInvoiceDto>(
                 message: "Purchase invoice retrieved successfully.",
                 success: true,
@@ -110,11 +150,21 @@ namespace WarehouseManagementSystem.Controllers
         [HttpPost("GetAllPurchaseInvoices")]
         public async Task<BaseResponse<List<PurchaseInvoiceDto>>> GetAllPurchaseInvoices([FromBody] IndexQuery query)
         {
+
             FilterObject filterObject = new FilterObject() { Filters = query.filters };
     
             var PurchaseInvoice = await _purchaseInvoiceRepository.GetFilterThenPagedReponseAsync(filterObject,  query.page, query.perPage);
 
             var PurchaseInvoiceDto = _mapper.Map<List<PurchaseInvoiceDto>>(PurchaseInvoice);
+            
+            foreach(var item in PurchaseInvoiceDto)
+            {
+                var Commissary = await _commissaryRepository.GetByIdAsync(item.CommissaryId);
+
+                item.CommissaryName = Commissary == null
+                    ? null
+                    : Commissary.Name;
+            }
 
             int Count = _purchaseInvoiceRepository.WhereThenFilter(c => true, filterObject).Count();
            
@@ -197,6 +247,19 @@ namespace WarehouseManagementSystem.Controllers
         [HttpPost("RefundPartialInvoice")]
         public async Task<BaseResponse<string>> RefundPartialInvoice([FromBody] RefundItemDto input)
         {
+            var token = HttpContext.Request.Headers["Authorization"].FirstOrDefault()?.Split(" ")[0];
+            
+            var commissaryId = _jwtProvider.GetCommissaryIdFromToken(token!);
+            
+            if(commissaryId == 0)
+            {
+                return new BaseResponse<string>(
+                    message: "You can't make refund",
+                    success: false,
+                    statusCode: 400
+                );
+            }
+
             // Retrieve the customer based on CustomerId
             var customer = await _customerRepository.GetByIdAsync(input.CustomerId);
             if (customer == null)
@@ -208,11 +271,11 @@ namespace WarehouseManagementSystem.Controllers
                 );
             }
 
-            var commissary = await GetCommissaryById(input.CommissaryId);
+            var commissary = await GetCommissaryById(commissaryId);
             if (commissary == null)
             {
                 return new BaseResponse<string>(
-                    message: $"Commissary with ID {input.CommissaryId} not found.",
+                    message: $"Commissary with ID {commissaryId} not found.",
                     success: false,
                     statusCode: 404
                 );
@@ -304,11 +367,24 @@ namespace WarehouseManagementSystem.Controllers
         [HttpPost("RefundPurchase")]
         public async Task<BaseResponse<string>> RefundPurchase([FromBody] CreatePurchaseInvoiceDto refundRequest)
         {
-            var commissary = await _commissaryRepository.GetByIdAsync(refundRequest.CommissaryId);
+            var token = HttpContext.Request.Headers["Authorization"].FirstOrDefault()?.Split(" ")[0];
+
+            var commissaryId = _jwtProvider.GetCommissaryIdFromToken(token!);
+
+            if (commissaryId == 0)
+            {
+                return new BaseResponse<string>(
+                    message: "You can't make refund",
+                    success: false,
+                    statusCode: 400
+                );
+            }
+
+            var commissary = await _commissaryRepository.GetByIdAsync(commissaryId);
             if (commissary == null)
             {
                 return new BaseResponse<string>(
-                    message: $"Commissary with ID {refundRequest.CommissaryId} not found.",
+                    message: $"Commissary with ID {commissaryId} not found.",
                     success: false,
                     statusCode: 404
                 );
@@ -368,6 +444,19 @@ namespace WarehouseManagementSystem.Controllers
         [HttpPost("CreateSalesInvoice")]
         public async Task<BaseResponse<SalesInvoiceDto>> CreateSalesInvoice([FromBody] CreateSelesInvoiceDto input)
         {
+            var token = HttpContext.Request.Headers["Authorization"].FirstOrDefault()?.Split(" ")[0];
+
+            var commissaryId = _jwtProvider.GetCommissaryIdFromToken(token!);
+
+            if (commissaryId == 0)
+            {
+                return new BaseResponse<SalesInvoiceDto>(
+                    message: "You can't Create Sales Invoice",
+                    success: false,
+                    statusCode: 400
+                );
+            }
+
             try
             {
                 // Validate customer existence
@@ -382,11 +471,11 @@ namespace WarehouseManagementSystem.Controllers
                 }
 
                 // Validate commissary existence
-                var commissary = await GetCommissaryById(input.CommissaryId);
+                var commissary = await GetCommissaryById(commissaryId);
                 if (commissary == null)
                 {
                     return new BaseResponse<SalesInvoiceDto>(
-                        message: $"Commissary with ID {input.CommissaryId} not found.",
+                        message: $"Commissary with ID {commissaryId} not found.",
                         success: false,
                         statusCode: 404
                     );
@@ -412,7 +501,7 @@ namespace WarehouseManagementSystem.Controllers
                     if (commissaryStock == null || commissaryStock.Quantity * (int)commissaryStock.Unit < item.Quantity * (int)item.Unit)
                     {
                         return new BaseResponse<SalesInvoiceDto>(
-                            message: $"Not enough stock for Product ID {item.ProductId} in Commissary ID {input.CommissaryId}. Requested quantity exceeds available stock.",
+                            message: $"Not enough stock for Product ID {item.ProductId} in Commissary ID {commissaryId}. Requested quantity exceeds available stock.",
                             success: false,
                             statusCode: 400
                         );
@@ -432,7 +521,7 @@ namespace WarehouseManagementSystem.Controllers
                 var currentBalance = CalculateCurrentBalance(previousBalance, invoiceTotal, input.Payment);
 
                 // Create sales invoice entity
-                var salesInvoice = CreateSalesInvoiceEntity(input, totalProductsPrice, discountAmount, invoiceTotal, previousBalance, currentBalance);
+                var salesInvoice = CreateSalesInvoiceEntity(input, commissaryId, totalProductsPrice, discountAmount, invoiceTotal, previousBalance, currentBalance);
 
                 // Update customer balance
                 await UpdateCustomerBalance(customer, currentBalance);
@@ -466,11 +555,22 @@ namespace WarehouseManagementSystem.Controllers
             }
         }
 
-
-
         [HttpPost("CreatePurchaseInvoice")]
         public async Task<BaseResponse<PurchaseInvoiceDto>> CreatePurchaseInvoice([FromBody] CreatePurchaseInvoiceDto input)
         {
+            var token = HttpContext.Request.Headers["Authorization"].FirstOrDefault()?.Split(" ")[0];
+
+            var commissaryId = _jwtProvider.GetCommissaryIdFromToken(token!);
+
+            if (commissaryId == 0)
+            {
+                return new BaseResponse<PurchaseInvoiceDto>(
+                    message: "You can't Create Purchase Invoice",
+                    success: false,
+                    statusCode: 400
+                );
+            }
+
             try
             {
                 if (input.InvoiceItems.Count == 0)
@@ -483,11 +583,11 @@ namespace WarehouseManagementSystem.Controllers
                 }
 
                 // Validate Commissary
-                var commissary = await _commissaryRepository.GetByIdAsync(input.CommissaryId);
+                var commissary = await _commissaryRepository.GetByIdAsync(commissaryId);
                 if (commissary == null)
                 {
                     return new BaseResponse<PurchaseInvoiceDto>(
-                        message: $"Commissary with ID {input.CommissaryId} not found.",
+                        message: $"Commissary with ID {commissaryId} not found.",
                         success: false,
                         statusCode: 404
                     );
@@ -587,6 +687,19 @@ namespace WarehouseManagementSystem.Controllers
         [HttpPut("UpdateSalesInvoice/{id}")]
         public async Task<BaseResponse<SalesInvoiceDto>> UpdateSalesInvoice(int id, [FromBody] CreateSelesInvoiceDto input)
         {
+            var token = HttpContext.Request.Headers["Authorization"].FirstOrDefault()?.Split(" ")[0];
+
+            var commissaryId = _jwtProvider.GetCommissaryIdFromToken(token!);
+
+            if (commissaryId == 0)
+            {
+                return new BaseResponse<SalesInvoiceDto>(
+                    message: "You can't Update Sales Invoice",
+                    success: false,
+                    statusCode: 400
+                );
+            }
+
             try
             {
                 var salesInvoice = await _salesInvoiceRepository.GetByIdAsync(id);
@@ -609,11 +722,11 @@ namespace WarehouseManagementSystem.Controllers
                     );
                 }
 
-                var commissary = await GetCommissaryById(input.CommissaryId);
+                var commissary = await GetCommissaryById(commissaryId);
                 if (commissary == null)
                 {
                     return new BaseResponse<SalesInvoiceDto>(
-                        message: $"Commissary with ID {input.CommissaryId} not found.",
+                        message: $"Commissary with ID {commissaryId} not found.",
                         success: false,
                         statusCode: 404
                     );
@@ -723,6 +836,7 @@ namespace WarehouseManagementSystem.Controllers
 
         private SalesInvoice CreateSalesInvoiceEntity(
             CreateSelesInvoiceDto input,
+            int commissaryId,
             decimal totalProductsPrice,
             decimal discountAmount,
             decimal invoiceTotal,
@@ -735,7 +849,7 @@ namespace WarehouseManagementSystem.Controllers
                 DiscountValue = discountAmount,
                 DiscountType = input.DiscountType,
                 CustomerId = input.CustomerId,
-                CommissaryId = input.CommissaryId,
+                CommissaryId = commissaryId,
                 TotalProductsPrice = totalProductsPrice,
                 InvoiceTotal = invoiceTotal,
                 PreviousBalance = previousBalance,

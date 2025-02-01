@@ -72,7 +72,7 @@ namespace WarehouseManagementSystem.Controllers
 
             Permissions.AddRange(UserPermissions);
 
-            var commissary = _commissaryRepository.Where(c => c.UserId == UserToLogin.Id).First();
+            var commissary = _commissaryRepository.Where(c => c.UserId == UserToLogin.Id).FirstOrDefault();
 
             var token = commissary == null
                 ? _jwtProvider.Generate(UserToLogin, 0)

@@ -28,16 +28,20 @@ namespace WarehouseManagementSystem.Helper
                     }
                     else
                     {
-                        UserToken userToken = dbContext.UserToken.Where(u => u.Id == userId).First();
-
-                        if (userToken.Token != token)
+                        UserToken userToken = dbContext.UserToken.Where(u => u.UserId == userId).FirstOrDefault();
+                        if (userToken != null)
                         {
-                            return false;
+                            if (userToken.Token != token)
+                            {
+                                return false;
+                            }
+                            else
+                            {
+                                return true;
+                            }
                         }
                         else
-                        {
-                            return true;
-                        }
+                            return false;
                     }
                 }
             }

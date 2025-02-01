@@ -435,7 +435,6 @@ namespace WarehouseManagementSystem.Controllers
             );
         }
 
-
         #endregion
 
         #region Create
@@ -556,19 +555,6 @@ namespace WarehouseManagementSystem.Controllers
         [HttpPost("CreatePurchaseInvoice")]
         public async Task<BaseResponse<PurchaseInvoiceDto>> CreatePurchaseInvoice([FromBody] CreatePurchaseInvoiceDto input)
         {
-            var token = HttpContext.Request.Headers["Authorization"].FirstOrDefault()?.Split(" ")[0];
-
-            var commissaryId = _jwtProvider.GetCommissaryIdFromToken(token!);
-
-            if (commissaryId == 0)
-            {
-                return new BaseResponse<PurchaseInvoiceDto>(
-                    message: "You can't Create Purchase Invoice",
-                    success: false,
-                    statusCode: 400
-                );
-            }
-
             try
             {
                 if (input.InvoiceItems.Count == 0)
@@ -581,11 +567,11 @@ namespace WarehouseManagementSystem.Controllers
                 }
 
                 // Validate Commissary
-                var commissary = await _commissaryRepository.GetByIdAsync(commissaryId);
+                var commissary = await _commissaryRepository.GetByIdAsync(input.CommissaryId);
                 if (commissary == null)
                 {
                     return new BaseResponse<PurchaseInvoiceDto>(
-                        message: $"Commissary with ID {commissaryId} not found.",
+                        message: $"Commissary with ID {input.CommissaryId} not found.",
                         success: false,
                         statusCode: 404
                     );

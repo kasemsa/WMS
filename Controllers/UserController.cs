@@ -42,14 +42,14 @@ namespace WarehouseManagementSystem.Controllers
         public async Task<IActionResult> CreateUser([FromBody] CreateUserDto user)
         {
             // Validation User Info
-            var checkUser = _UserRepository.Where(u => u.UserName == user.UserName).First();
+            var checkUser = _UserRepository.Where(u => u.UserName == user.UserName).FirstOrDefault();
 
             if (checkUser != null)
             {
                 return Ok(new BaseResponse<object>("إسم المستخدم موجود مسبقا", false, 400));
             }
 
-            checkUser = _UserRepository.Where(u => u.Email == user.Email).First();
+            checkUser = _UserRepository.Where(u => u.Email == user.Email).FirstOrDefault();
 
             if (checkUser != null)
             {

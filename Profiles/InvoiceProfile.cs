@@ -8,7 +8,7 @@ namespace WarehouseManagementSystem.Profiles
     {
         public InvoiceProfile()
         {
-            CreateMap<InvoiceItemDto, InvoiceItem>();
+            CreateMap<InvoiceItemDto, InvoiceItem>().ReverseMap();
 
             CreateMap<SalesInvoice, SalesInvoiceDto>()
                 .ForMember(dest => dest.InvoiceItems, opt => opt.MapFrom(src => src.InvoiceItems))

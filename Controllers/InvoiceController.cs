@@ -82,8 +82,8 @@ namespace WarehouseManagementSystem.Controllers
             );
         }
 
-        [HttpGet("GetAllSalesInvoices")]
-        public async Task<BaseResponse<List<SalesInvoiceDto>>> GetAllSelesInvoices(IndexQuery query)
+        [HttpPost("GetAllSalesInvoices")]
+        public async Task<BaseResponse<List<SalesInvoiceDto>>> GetAllSelesInvoices([FromBody] IndexQuery query)
         {
             FilterObject filterObject = new FilterObject() { Filters = query.filters };
     
@@ -118,8 +118,6 @@ namespace WarehouseManagementSystem.Controllers
         public async Task<BaseResponse<PurchaseInvoiceDto>> GetPurchaseInvoiceById(int id)
         {
             var purchaseInvoice = await _purchaseInvoiceRepository.GetByIdAsync(id, si => si.InvoiceItems);
-
-            
 
             if (purchaseInvoice == null)
             {

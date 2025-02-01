@@ -125,6 +125,11 @@ namespace WarehouseManagementSystem.DataBase.Seeders
                     //Id = 21,
                     PermissionName = "GetAllUsers"
                 },
+                new Permission()
+                {
+                    //Id = 21,
+                    PermissionName = "GetUserInfo"
+                },
                 //------Invoice-----
                 new Permission()
                 {

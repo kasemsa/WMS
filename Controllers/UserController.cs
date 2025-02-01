@@ -2,8 +2,10 @@
 using Microsoft.AspNetCore.Cryptography.KeyDerivation;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 using WarehouseManagementSystem.Contract.BaseRepository;
 using WarehouseManagementSystem.DataBase;
+using WarehouseManagementSystem.Infrastructure.JwtService;
 using WarehouseManagementSystem.Models;
 using WarehouseManagementSystem.Models.Common;
 using WarehouseManagementSystem.Models.Constants;
@@ -22,9 +24,10 @@ namespace WarehouseManagementSystem.Controllers
         private readonly IAsyncRepository<UserPermission> _userPermissionRepository;
         private readonly IAsyncRepository<RolePermission> _rolePermissionRepository;
         private readonly IAsyncRepository<UserToken> _userTokenRepository;
+        private readonly IJwtProvider _jwtProvider;
         private readonly IMapper _mapper;
 
-        public UserController(IAsyncRepository<UserToken> userTokenRepository, IAsyncRepository<RolePermission> rolePermissionRepository, IAsyncRepository<UserPermission> userPermissionRepository, IAsyncRepository<UserRole> userRoleRepository, IMapper mapper, IAsyncRepository<User> UserRepository)
+        public UserController(IJwtProvider jwtProvider, IAsyncRepository<UserToken> userTokenRepository, IAsyncRepository<RolePermission> rolePermissionRepository, IAsyncRepository<UserPermission> userPermissionRepository, IAsyncRepository<UserRole> userRoleRepository, IMapper mapper, IAsyncRepository<User> UserRepository)
         {
             _mapper = mapper;
             _UserRepository = UserRepository;
@@ -32,6 +35,7 @@ namespace WarehouseManagementSystem.Controllers
             _userPermissionRepository = userPermissionRepository;
             _userRoleRepository = userRoleRepository;
             _userTokenRepository = userTokenRepository;
+            _jwtProvider = jwtProvider;
         }
         
         [HttpPost("CreateUser")]
@@ -196,6 +200,32 @@ namespace WarehouseManagementSystem.Controllers
             Pagination pagination = new Pagination(query.page, query.perPage, Count);
 
             return new BaseResponse<IEnumerable<UserDto>>("", true, 200, UsersDtos, pagination);
+        }
+
+        [HttpGet("GetUserInfo")]
+        public async Task<BaseResponse<AuthenticationResponse>> GetUserInfo()
+        {
+            var token = HttpContext.Request.Headers["Authorization"].FirstOrDefault()?.Split(" ")[0];
+
+            var UserId = _jwtProvider.GetUserIdFromToken(token!);
+
+            var User = await _UserRepository.GetByIdAsync(UserId);
+
+            var UserRoles = _userRoleRepository.Where(r => r.UserId == UserId).Include(r => r.Role).Select(r => r.Role).ToList();
+
+            var Permissions = _rolePermissionRepository.Where(p => UserRoles.Contains(p.Role)).Include(p => p.Permission).Select(p => p.Permission).ToList();
+            
+            var UserPermissions = _userPermissionRepository.Where(u => u.UserId == UserId).Select(u => u.Permission).ToList();
+
+            Permissions.AddRange(UserPermissions);
+
+            var Response = _mapper.Map<AuthenticationResponse>(User);
+
+            Response.Roles = UserRoles;
+
+            Response.Permissions = Permissions;
+
+            return new BaseResponse<AuthenticationResponse>(Response, "", true, 200);
         }
     }
 }

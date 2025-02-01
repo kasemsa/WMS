@@ -22,12 +22,13 @@ namespace WarehouseManagementSystem.Controllers
         private readonly IAsyncRepository<UserRole> _roleRepository;
         private readonly IAsyncRepository<RolePermission> _rolePermissionRepository;
         private readonly IAsyncRepository<Commissary> _commissaryRepository;
+        private readonly IAsyncRepository<UserPermission> _UserPermissionRepository;
         private readonly IMapper _mapper;
         private readonly IJwtProvider _jwtProvider;
         private readonly IServiceProvider _serviceProvider;
         private readonly ISeedService _seedServices;
 
-        public AuthenticationController(IAsyncRepository<Commissary> commissaryRepository, ISeedService seedServices, IServiceProvider serviceProvider, IAsyncRepository<RolePermission> rolePermissionRepository, IAsyncRepository<UserRole> roleRepository, IAsyncRepository<User> userRepository, IAsyncRepository<UserToken> userTokenRepository, IMapper mapper, IJwtProvider jwtProvider)
+        public AuthenticationController(IAsyncRepository<UserPermission> UserPermissionRepository,  IAsyncRepository<Commissary> commissaryRepository, ISeedService seedServices, IServiceProvider serviceProvider, IAsyncRepository<RolePermission> rolePermissionRepository, IAsyncRepository<UserRole> roleRepository, IAsyncRepository<User> userRepository, IAsyncRepository<UserToken> userTokenRepository, IMapper mapper, IJwtProvider jwtProvider)
         {
             _userRepository = userRepository;
             _userTokenRepository = userTokenRepository;
@@ -38,6 +39,7 @@ namespace WarehouseManagementSystem.Controllers
             _seedServices = seedServices;
             _serviceProvider = serviceProvider;
             _commissaryRepository = commissaryRepository;
+            _UserPermissionRepository = UserPermissionRepository;
         }
 
         [HttpPost("LogIn")]
@@ -66,6 +68,9 @@ namespace WarehouseManagementSystem.Controllers
             var UserRoles = _roleRepository.Where(r => r.UserId == UserToLogin.Id).Include(r => r.Role).Select(r => r.Role).ToList();
 
             var Permissions = _rolePermissionRepository.Where(p => UserRoles.Contains(p.Role)).Include(p => p.Permission).Select(p => p.Permission).ToList();
+            var UserPermissions = _UserPermissionRepository.Where(u => u.UserId == UserToLogin.Id).Select(u => u.Permission).ToList();
+
+            Permissions.AddRange(UserPermissions);
 
             var commissary = _commissaryRepository.Where(c => c.UserId == UserToLogin.Id).First();
 
@@ -73,7 +78,7 @@ namespace WarehouseManagementSystem.Controllers
                 ? _jwtProvider.Generate(UserToLogin, 0)
                 : _jwtProvider.Generate(UserToLogin, commissary.Id);
 
-            var userToken = _userTokenRepository.Where(u => u.UserId == UserToLogin.Id).First();
+            var userToken = _userTokenRepository.Where(u => u.UserId == UserToLogin.Id).FirstOrDefault();
             
             if(userToken == null)
             {

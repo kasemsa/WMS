@@ -22,5 +22,9 @@ namespace WarehouseManagementSystem.Models
         [ForeignKey(nameof(PurchaseInvoiceId))]
         public PurchaseInvoice? PurchaseInvoice { get; set; }
 
+        public int? CommissaryId { get; set; }
+        [ForeignKey(nameof(CommissaryId))]
+        public Commissary? Commissary { get; set; }
+
     }
 }

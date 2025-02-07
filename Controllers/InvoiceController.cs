@@ -246,17 +246,6 @@ namespace WarehouseManagementSystem.Controllers
         public async Task<BaseResponse<string>> RefundPartialInvoice([FromBody] RefundItemDto input)
         {
             var token = HttpContext.Request.Headers["Authorization"].FirstOrDefault()?.Split(" ")[0];
-            
-            var commissaryId = _jwtProvider.GetCommissaryIdFromToken(token!);
-            
-            if(commissaryId == 0)
-            {
-                return new BaseResponse<string>(
-                    message: "You can't make refund",
-                    success: false,
-                    statusCode: 400
-                );
-            }
 
             // Retrieve the customer based on CustomerId
             var customer = await _customerRepository.GetByIdAsync(input.CustomerId);
@@ -269,11 +258,11 @@ namespace WarehouseManagementSystem.Controllers
                 );
             }
 
-            var commissary = await GetCommissaryById(commissaryId);
+            var commissary = await GetCommissaryById(input.CommissaryId);
             if (commissary == null)
             {
                 return new BaseResponse<string>(
-                    message: $"Commissary with ID {commissaryId} not found.",
+                    message: $"Commissary with ID {input.CommissaryId} not found.",
                     success: false,
                     statusCode: 404
                 );

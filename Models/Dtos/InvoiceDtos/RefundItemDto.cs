@@ -4,6 +4,9 @@ namespace WarehouseManagementSystem.Models.Dtos.InvoiceDtos
 {
     public class RefundItemDto
     {
+        [JsonProperty("CommissaryId")]
+        public int CommissaryId { get; set; }
+
         [JsonProperty("CustomerId")]
         public int CustomerId { get; set; }
 

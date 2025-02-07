@@ -6,7 +6,7 @@ namespace WarehouseManagementSystem.Models
     public class PurchaseInvoice : AuditableEntity, IInvoice
     {
         public int Id { get; set; }
-        public Customer Commissary { get; set; } = null!;
+        public Commissary Commissary { get; set; } = null!;
         [ForeignKey(nameof(Commissary))]
         public int CommissaryId { get; set; }
 

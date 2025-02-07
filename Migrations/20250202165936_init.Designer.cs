@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using WarehouseManagementSystem.DataBase;
 
@@ -11,9 +12,11 @@ using WarehouseManagementSystem.DataBase;
 namespace WarehouseManagementSystem.Migrations
 {
     [DbContext(typeof(WarehouseDbContext))]
-    partial class WarehouseDbContextModelSnapshot : ModelSnapshot
+    [Migration("20250202165936_init")]
+    partial class init
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -636,7 +639,7 @@ namespace WarehouseManagementSystem.Migrations
 
             modelBuilder.Entity("WarehouseManagementSystem.Models.PurchaseInvoice", b =>
                 {
-                    b.HasOne("WarehouseManagementSystem.Models.Commissary", "Commissary")
+                    b.HasOne("WarehouseManagementSystem.Models.Customer", "Commissary")
                         .WithMany()
                         .HasForeignKey("CommissaryId")
                         .OnDelete(DeleteBehavior.Cascade)

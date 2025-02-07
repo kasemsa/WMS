@@ -6,7 +6,6 @@ using WarehouseManagementSystem.Models;
 using WarehouseManagementSystem.Models.Common;
 using WarehouseManagementSystem.Models.Constants;
 using WarehouseManagementSystem.Models.Dtos.InvoiceDtos;
-using WarehouseManagementSystem.Models.Dtos.ProductDtos;
 using WarehouseManagementSystem.Models.Responses;
 
 namespace WarehouseManagementSystem.Controllers
@@ -22,7 +21,7 @@ namespace WarehouseManagementSystem.Controllers
         private readonly IAsyncRepository<SalesInvoice> _salesInvoiceRepository;
         private readonly IAsyncRepository<PurchaseInvoice> _purchaseInvoiceRepository;
         private readonly IJwtProvider _jwtProvider;
-                
+
         private readonly IMapper _mapper;
 
         public InvoiceController(
@@ -86,8 +85,8 @@ namespace WarehouseManagementSystem.Controllers
         public async Task<BaseResponse<List<SalesInvoiceDto>>> GetAllSelesInvoices([FromBody] IndexQuery query)
         {
             FilterObject filterObject = new FilterObject() { Filters = query.filters };
-    
-            var SelesInvoices = await _salesInvoiceRepository.GetFilterThenPagedReponseAsync(filterObject,  query.page, query.perPage);
+
+            var SelesInvoices = await _salesInvoiceRepository.GetFilterThenPagedReponseAsync(filterObject, query.page, query.perPage);
 
             var salesInvoicesDto = _mapper.Map<List<SalesInvoiceDto>>(SelesInvoices);
 
@@ -107,7 +106,7 @@ namespace WarehouseManagementSystem.Controllers
             }
 
             int Count = _salesInvoiceRepository.WhereThenFilter(c => true, filterObject).Count();
-           
+
             Pagination pagination = new Pagination(query.page, query.perPage, Count);
 
             return new BaseResponse<List<SalesInvoiceDto>>("", true, 200, salesInvoicesDto, pagination);
@@ -134,7 +133,7 @@ namespace WarehouseManagementSystem.Controllers
             var Commissary = await _commissaryRepository.GetByIdAsync(purchaseInvoiceDto.CommissaryId);
 
             purchaseInvoiceDto.CommissaryName = Commissary == null
-                ?null
+                ? null
                 : Commissary.Name;
 
             return new BaseResponse<PurchaseInvoiceDto>(
@@ -150,12 +149,12 @@ namespace WarehouseManagementSystem.Controllers
         {
 
             FilterObject filterObject = new FilterObject() { Filters = query.filters };
-    
-            var PurchaseInvoice = await _purchaseInvoiceRepository.GetFilterThenPagedReponseAsync(filterObject,  query.page, query.perPage);
+
+            var PurchaseInvoice = await _purchaseInvoiceRepository.GetFilterThenPagedReponseAsync(filterObject, query.page, query.perPage);
 
             var PurchaseInvoiceDto = _mapper.Map<List<PurchaseInvoiceDto>>(PurchaseInvoice);
-            
-            foreach(var item in PurchaseInvoiceDto)
+
+            foreach (var item in PurchaseInvoiceDto)
             {
                 var Commissary = await _commissaryRepository.GetByIdAsync(item.CommissaryId);
 
@@ -165,10 +164,10 @@ namespace WarehouseManagementSystem.Controllers
             }
 
             int Count = _purchaseInvoiceRepository.WhereThenFilter(c => true, filterObject).Count();
-           
+
             Pagination pagination = new Pagination(query.page, query.perPage, Count);
 
-            return  new BaseResponse<List<PurchaseInvoiceDto>>("", true, 200, PurchaseInvoiceDto, pagination);
+            return new BaseResponse<List<PurchaseInvoiceDto>>("", true, 200, PurchaseInvoiceDto, pagination);
         }
 
         #endregion
@@ -246,6 +245,18 @@ namespace WarehouseManagementSystem.Controllers
         public async Task<BaseResponse<string>> RefundPartialInvoice([FromBody] RefundItemDto input)
         {
             var token = HttpContext.Request.Headers["Authorization"].FirstOrDefault()?.Split(" ")[0];
+
+
+            var commissaryId = _jwtProvider.GetCommissaryIdFromToken(token!);
+
+            if (commissaryId == 0)
+            {
+                return new BaseResponse<string>(
+                    message: "You can't make refund",
+                    success: false,
+                    statusCode: 400
+                );
+            }
 
             // Retrieve the customer based on CustomerId
             var customer = await _customerRepository.GetByIdAsync(input.CustomerId);
@@ -760,7 +771,7 @@ namespace WarehouseManagementSystem.Controllers
 
         private async Task<Commissary?> GetCommissaryById(int commissaryId)
         {
-            return await _commissaryRepository.GetByIdAsync(commissaryId);
+            return await _commissaryRepository.GetByIdAsync(commissaryId, si => si.InvoiceItems);
         }
 
         private async Task<List<int>> GetMissingProducts(List<InvoiceItemDto> invoiceItems)

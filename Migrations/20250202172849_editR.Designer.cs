@@ -12,8 +12,8 @@ using WarehouseManagementSystem.DataBase;
 namespace WarehouseManagementSystem.Migrations
 {
     [DbContext(typeof(WarehouseDbContext))]
-    [Migration("20250126153716_InitialDataBase")]
-    partial class InitialDataBase
+    [Migration("20250202172849_editR")]
+    partial class editR
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -610,7 +610,7 @@ namespace WarehouseManagementSystem.Migrations
 
             modelBuilder.Entity("WarehouseManagementSystem.Models.InvoiceItem", b =>
                 {
-                    b.HasOne("WarehouseManagementSystem.Models.Commissary", null)
+                    b.HasOne("WarehouseManagementSystem.Models.Commissary", "Commissary")
                         .WithMany("InvoiceItems")
                         .HasForeignKey("CommissaryId");
 
@@ -628,6 +628,8 @@ namespace WarehouseManagementSystem.Migrations
                         .WithMany("InvoiceItems")
                         .HasForeignKey("SalesInvoiceId");
 
+                    b.Navigation("Commissary");
+
                     b.Navigation("Product");
 
                     b.Navigation("PurchaseInvoice");
@@ -637,7 +639,7 @@ namespace WarehouseManagementSystem.Migrations
 
             modelBuilder.Entity("WarehouseManagementSystem.Models.PurchaseInvoice", b =>
                 {
-                    b.HasOne("WarehouseManagementSystem.Models.Customer", "Commissary")
+                    b.HasOne("WarehouseManagementSystem.Models.Commissary", "Commissary")
                         .WithMany()
                         .HasForeignKey("CommissaryId")
                         .OnDelete(DeleteBehavior.Cascade)

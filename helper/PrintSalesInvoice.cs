@@ -53,7 +53,7 @@ namespace WarehouseManagementSystem.Helper
                 column.Item().Text("Bill To:").Bold();
                 column.Item().Text(Model.Customer.Name);
                 column.Item().Element(ComposeTable);
-                column.Item().AlignRight().Text($"Total Amount: ${Model.TotalProductsPrice}").Bold();
+                column.Item().AlignRight().Text($"Total Amount: ${Model.InvoiceTotal}").Bold();
             });
         }
 

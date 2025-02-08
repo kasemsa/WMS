@@ -16,5 +16,8 @@ namespace WarehouseManagementSystem.Models.Dtos.InvoiceDtos
 
         [JsonProperty("ProductId")]
         public int ProductId { get; set; }
+
+        [JsonProperty("ProductName")]
+        public string? ProductName { get; set; }
     }
 }

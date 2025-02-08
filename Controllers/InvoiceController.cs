@@ -47,7 +47,7 @@ namespace WarehouseManagementSystem.Controllers
         [HttpGet("GetSalesInvoiceById/{id}")]
         public async Task<BaseResponse<SalesInvoiceDto>> GetSalesInvoiceById(int id)
         {
-            var salesInvoice = await _salesInvoiceRepository.GetByIdAsync(id, si => si.InvoiceItems);
+            var salesInvoice = await _salesInvoiceRepository.GetByIdAsync(id, si => si.InvoiceItems, si => si.Customer, si => si.Commissary);
 
             if (salesInvoice == null)
             {
@@ -61,17 +61,12 @@ namespace WarehouseManagementSystem.Controllers
 
             var salesInvoiceDto = _mapper.Map<SalesInvoiceDto>(salesInvoice);
 
-            var Commissary = await _commissaryRepository.GetByIdAsync(salesInvoiceDto.CommissaryId);
-
-            salesInvoiceDto.CommissaryName = Commissary == null
-                ? null!
-                : Commissary.Name;
-
-            var Customer = await _customerRepository.GetByIdAsync(salesInvoiceDto.CustomerId);
-
-            salesInvoiceDto.CustomerName = Customer == null
-                ? null!
-                : Customer.Name;
+            // Ensure that the product names are correctly mapped
+            foreach (var item in salesInvoiceDto.InvoiceItems)
+            {
+                var product = await _productRepository.GetByIdAsync(item.ProductId);
+                item.ProductName = product?.Name;
+            }
 
             return new BaseResponse<SalesInvoiceDto>(
                 message: "Sales invoice retrieved successfully.",
@@ -269,11 +264,11 @@ namespace WarehouseManagementSystem.Controllers
                 );
             }
 
-            var commissary = await GetCommissaryById(input.CommissaryId);
+            var commissary = await GetCommissaryById(commissaryId);
             if (commissary == null)
             {
                 return new BaseResponse<string>(
-                    message: $"Commissary with ID {input.CommissaryId} not found.",
+                    message: $"Commissary with ID {commissaryId} not found.",
                     success: false,
                     statusCode: 404
                 );
@@ -438,6 +433,7 @@ namespace WarehouseManagementSystem.Controllers
         #endregion
 
         #region Create
+
         [HttpPost("CreateSalesInvoice")]
         public async Task<BaseResponse<SalesInvoiceDto>> CreateSalesInvoice([FromBody] CreateSelesInvoiceDto input)
         {
@@ -479,6 +475,7 @@ namespace WarehouseManagementSystem.Controllers
                 }
 
                 // Validate product existence and commissary stock
+                var invoiceItemsWithProductNames = new List<InvoiceItem>();
                 foreach (var item in input.InvoiceItems)
                 {
                     var product = await _productRepository.GetByIdAsync(item.ProductId);
@@ -506,10 +503,29 @@ namespace WarehouseManagementSystem.Controllers
 
                     // Deduct the quantity from the commissary stock
                     commissaryStock.Quantity -= item.Quantity * (int)item.Unit; // Adjust for unit multiplier
+
+                    // Add product name to the invoice item
+                    invoiceItemsWithProductNames.Add(new InvoiceItem
+                    {
+                        ProductId = item.ProductId,
+                        Quantity = item.Quantity,
+                        Unit = item.Unit,
+                        Price = item.Price,
+                        Product = product
+                    });
                 }
 
                 // Calculate total price and discount
                 var totalProductsPrice = CalculateTotalProductsPrice(input.InvoiceItems);
+                if (totalProductsPrice <= 0)
+                {
+                    return new BaseResponse<SalesInvoiceDto>(
+                        message: "Total products price must be greater than zero.",
+                        success: false,
+                        statusCode: 400
+                    );
+                }
+
                 var discountAmount = CalculateDiscount(input.DiscountType, input.DiscountValue, totalProductsPrice);
                 var invoiceTotal = totalProductsPrice - discountAmount;
 
@@ -518,12 +534,10 @@ namespace WarehouseManagementSystem.Controllers
                 var currentBalance = CalculateCurrentBalance(previousBalance, invoiceTotal, input.Payment);
 
                 // Create sales invoice entity
-                var salesInvoice = CreateSalesInvoiceEntity(input, commissaryId, totalProductsPrice, discountAmount, invoiceTotal, previousBalance, currentBalance);
+                var salesInvoice = CreateSalesInvoiceEntity(input, commissaryId, totalProductsPrice, discountAmount, invoiceTotal, previousBalance, currentBalance, invoiceItemsWithProductNames);
 
                 // Update customer balance
                 await UpdateCustomerBalance(customer, currentBalance);
-
-                // Update commissary balance
 
                 // Save commissary updates
                 await _commissaryRepository.UpdateAsync(commissary);
@@ -819,13 +833,14 @@ namespace WarehouseManagementSystem.Controllers
         }
 
         private SalesInvoice CreateSalesInvoiceEntity(
-            CreateSelesInvoiceDto input,
-            int commissaryId,
-            decimal totalProductsPrice,
-            decimal discountAmount,
-            decimal invoiceTotal,
-            decimal previousBalance,
-            decimal currentBalance)
+        CreateSelesInvoiceDto input,
+        int commissaryId,
+        decimal totalProductsPrice,
+        decimal discountAmount,
+        decimal invoiceTotal,
+        decimal previousBalance,
+        decimal currentBalance,
+        List<InvoiceItem> invoiceItems)
         {
             return new SalesInvoice
             {
@@ -838,13 +853,7 @@ namespace WarehouseManagementSystem.Controllers
                 InvoiceTotal = invoiceTotal,
                 PreviousBalance = previousBalance,
                 CurrentBalance = currentBalance,
-                InvoiceItems = input.InvoiceItems.Select(item => new InvoiceItem
-                {
-                    ProductId = item.ProductId,
-                    Quantity = item.Quantity,
-                    Unit = item.Unit,
-                    Price = item.Price
-                }).ToList()
+                InvoiceItems = invoiceItems
             };
         }
 

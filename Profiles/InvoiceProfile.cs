@@ -30,7 +30,8 @@ namespace WarehouseManagementSystem.Profiles
                 .ForMember(dest => dest.Commissary, opt => opt.Ignore());
 
 
-            CreateMap<InvoiceItem, InvoiceItemDto>();
+            CreateMap<InvoiceItem, InvoiceItemDto>()
+                .ForMember(dest => dest.ProductName, opt => opt.MapFrom(src => src.Product.Name));
 
             CreateMap<InvoiceItemDto, InvoiceItem>()
                 .ForMember(dest => dest.Product, opt => opt.Ignore())

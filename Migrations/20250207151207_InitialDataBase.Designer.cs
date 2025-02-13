@@ -12,8 +12,8 @@ using WarehouseManagementSystem.DataBase;
 namespace WarehouseManagementSystem.Migrations
 {
     [DbContext(typeof(WarehouseDbContext))]
-    [Migration("20250202172849_editR")]
-    partial class editR
+    [Migration("20250207151207_InitialDataBase")]
+    partial class InitialDataBase
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)

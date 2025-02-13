@@ -1,5 +1,6 @@
 ﻿using AutoMapper;
 using Microsoft.AspNetCore.Mvc;
+using System.Linq;
 using WarehouseManagementSystem.Contract.BaseRepository;
 using WarehouseManagementSystem.Infrastructure.JwtService;
 using WarehouseManagementSystem.Models;
@@ -125,6 +126,13 @@ namespace WarehouseManagementSystem.Controllers
 
             var purchaseInvoiceDto = _mapper.Map<PurchaseInvoiceDto>(purchaseInvoice);
 
+            // Ensure that the product names are correctly mapped
+            foreach (var item in purchaseInvoiceDto.InvoiceItems)
+            {
+                var product = await _productRepository.GetByIdAsync(item.ProductId);
+                item.ProductName = product?.Name;
+            }
+
             var Commissary = await _commissaryRepository.GetByIdAsync(purchaseInvoiceDto.CommissaryId);
 
             purchaseInvoiceDto.CommissaryName = Commissary == null
@@ -149,6 +157,7 @@ namespace WarehouseManagementSystem.Controllers
 
             var PurchaseInvoiceDto = _mapper.Map<List<PurchaseInvoiceDto>>(PurchaseInvoice);
 
+
             foreach (var item in PurchaseInvoiceDto)
             {
                 var Commissary = await _commissaryRepository.GetByIdAsync(item.CommissaryId);
@@ -156,6 +165,15 @@ namespace WarehouseManagementSystem.Controllers
                 item.CommissaryName = Commissary == null
                     ? null
                     : Commissary.Name;
+            }
+
+            if (filterObject.Filters != null && filterObject.Filters.Any(f => f.Key == "CommissaryName"))
+            {
+                var CommissaryNameValue = filterObject.Filters.Where(f => f.Key == "CommissaryName").Select(f => f.Value).FirstOrDefault();
+
+                PurchaseInvoiceDto = CommissaryNameValue is null or ""
+                    ? PurchaseInvoiceDto
+                    : PurchaseInvoiceDto.Where(p => p.CommissaryName!.Contains(CommissaryNameValue)).ToList();
             }
 
             int Count = _purchaseInvoiceRepository.WhereThenFilter(c => true, filterObject).Count();
